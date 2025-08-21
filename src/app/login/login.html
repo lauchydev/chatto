@@ -1,0 +1,34 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <img src="logo.svg" alt="Chatto Logo" class="logo" />
+    </div>
+    <!-- Form -->
+    <form class="login-form">
+      <h2>Login to your account</h2>
+      <p>Enter your email below to login to your account</p>
+      <div class="form-group">
+        <label for="email"> Email</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          placeholder="me@example.com"
+          class="form-input"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          class="form-input"
+        />
+      </div>
+      <button type="submit" class="login-button">Login</button>
+    </form>
+  </div>
+</div>

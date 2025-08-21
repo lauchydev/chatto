@@ -1,1 +1,45 @@
-/* You can add global styles to this file, and also import other style files */
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* CSS Custom Properties - Core colors only */
+:root {
+  /* Essential colors for login page */
+  --background: #1e1f22;
+  --foreground: #dbdee1;
+  --card: #2b2d31;
+  --primary: #5865f2;
+  --primary-foreground: #ffffff;
+  --muted-foreground: #b5bac1;
+  --border: #42464d;
+  --input: #383a40;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+/* Base styles */
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/* Remove default button styles */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}

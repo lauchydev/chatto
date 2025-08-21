@@ -1,0 +1,109 @@
+.login-container {
+  height: 100vh; /* vh = viewport height */
+  width: 100vw; /* vw = viewport width */
+
+  display: flex; /* Way to center items */
+  justify-content: center; /* Horizontal Centering */
+  align-items: center; /* Vertical Centering */
+
+  background-color: var(--background); /* Colour theme I generated with AI */
+}
+
+.login-card {
+  width: 400px;
+  max-width: 90%;
+  padding: 32px;
+
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* Cool Shadow  */
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px; /* Put the logo away from the rest of the form */
+}
+
+.logo {
+  height: 32px;
+  width: auto;
+}
+
+.login-form h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0 0 8px 0;
+}
+
+.login-form p {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  margin: 0 0 24px 0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block; /* Each label is on its own line */
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+
+  background-color: var(--input);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  outline: none;
+
+  transition: border-color 0.2 ease;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+}
+
+.form-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px 24px;
+  margin-top: 8px;
+
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-button::hover {
+  background-color: #4752c4;
+}
+
+.login-button:active {
+  transform: translateY(1px);
+}

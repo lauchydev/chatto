@@ -1,0 +1,10 @@
+.logo {
+  filter: invert(1) brightness(0.8) contrast(1.2);
+}
+
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--background);
+}
