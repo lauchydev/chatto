@@ -11,15 +11,48 @@
   --background: #1e1f22;
   --foreground: #dbdee1;
   --card: #2b2d31;
+  --card-foreground: #dbdee1;
+  --popover: #2b2d31;
+  --popover-foreground: #dbdee1;
   --primary: #5865f2;
   --primary-foreground: #ffffff;
+  --secondary: #4e5058;
+  --secondary-foreground: #b5bac1;
+  --muted: #383a40;
   --muted-foreground: #b5bac1;
+  --accent: #404249;
+  --accent-foreground: #dbdee1;
+  --destructive: #ed4245;
+  --destructive-foreground: #ffffff;
   --border: #42464d;
   --input: #383a40;
+  --ring: #5865f2;
+  --success: #3ba55c;
+  --warning: #faa61a;
+
+  /* Additional Discord-specific colors */
+  --sidebar-bg: #2b2d31;
+  --channel-bg: #2b2d31;
+  --chat-bg: #313338;
+  --mention: #5865f2;
+  --link: #00aff4;
+  --message-hover: #2e3035;
+  --online: #23a559;
+  --idle: #f0b232;
+  --dnd: #f23f43;
+  --offline: #80848e;
+
+  /* Spacing and sizing */
+  --radius: 0.5rem;
+  --header-height: 48px;
+  --sidebar-width: 240px;
+  --server-list-width: 72px;
 
   /* Typography */
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo,
+    monospace;
 }
 
 /* Base styles */
@@ -34,6 +67,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   line-height: 1.5;
+  overflow: hidden;
 }
 
 /* Remove default button styles */
@@ -42,4 +76,57 @@ button {
   background: none;
   cursor: pointer;
   font-family: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Utility classes */
+.text-primary {
+  color: var(--primary);
+}
+
+.text-secondary {
+  color: var(--secondary-foreground);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.bg-card {
+  background-color: var(--card);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.rounded {
+  border-radius: var(--radius);
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }

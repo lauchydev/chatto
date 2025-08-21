@@ -5,14 +5,22 @@
       <img src="logo.svg" alt="Chatto Logo" class="logo" />
     </div>
     <!-- Form -->
-    <form class="login-form">
+    <form #form="ngForm" (ngSubmit)="validateUser(form)" novalidate class="login-form">
       <h2>Login to your account</h2>
       <p>Enter your email below to login to your account</p>
+
+      @if (errorMessage) {
+      <div class="error-message">
+        <span class="error-text">{{ errorMessage }}</span>
+      </div>
+      }
+
       <div class="form-group">
-        <label for="email"> Email</label>
+        <label for="email"> Username</label>
         <input
           type="email"
           id="email"
+          name="email"
           [(ngModel)]="email"
           placeholder="me@example.com"
           class="form-input"

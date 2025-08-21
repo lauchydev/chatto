@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "username": "super",
+    "email": "super",
+    "birthdate": "2001-01-05",
+    "age": 20,
+    "groups": [],
+    "roles": ["superadmin"],
+    "password": "123",
+    "valid": false
+  },
+  {
+    "id": 2,
+    "username": "groupadmin",
+    "email": "groupadmin",
+    "birthdate": "2003-04-13",
+    "age": 20,
+    "groups": [],
+    "roles": ["groupadmin"],
+    "password": "groupadmin",
+    "valid": false
+  },
+  {
+    "id": 3,
+    "username": "user",
+    "email": "user",
+    "birthdate": "2005-05-02",
+    "age": 20,
+    "groups": [],
+    "roles": ["user"],
+    "password": "user",
+    "valid": false
+  }
+]
