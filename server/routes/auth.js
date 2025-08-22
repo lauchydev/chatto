@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const User = require('../user.js');
-const users = JSON.parse(require('../user-list.js').readJsonAsString('users.json'));
+const User = require('../data/user.js');
+const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users.json'));
 
 router.post('', async (req, res) => {
   if (!req.body) {

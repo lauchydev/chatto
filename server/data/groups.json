@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "name": "Griffith",
+    "icon": "",
+    "owner": 1,
+    "members": [1, 2, 3],
+    "admins": [1, 2],
+    "channels": [1, 2]
+  },
+  {
+    "id": 2,
+    "name": "Gaming",
+    "icon": "",
+    "owner": 2,
+    "members": [1, 2],
+    "admins": [2],
+    "channels": [3, 4]
+  },
+  {
+    "id": 3,
+    "name": "Chatto",
+    "icon": "",
+    "owner": "",
+    "members": "",
+    "channels": ""
+  }
+]

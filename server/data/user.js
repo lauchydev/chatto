@@ -5,8 +5,8 @@ class Users {
     this.email = email;
     this.birthdate = birthdate;
     this.age = age;
-    this.groups = groups;
-    this.roles = roles;
+    this.groups = [groups];
+    this.roles = [roles];
     this.password = password;
     this.valid = valid;
   }
