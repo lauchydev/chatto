@@ -1,8 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{html,ts}",
-  ],
+  content: ['./src/**/*.{html,ts}', './src/**/*.html'],
   theme: {
     extend: {
       colors: {
@@ -63,11 +61,11 @@ module.exports = {
         mono: 'var(--font-mono)',
       },
       spacing: {
-        'header': 'var(--header-height)',
-        'sidebar': 'var(--sidebar-width)',
+        header: 'var(--header-height)',
+        sidebar: 'var(--sidebar-width)',
         'server-list': 'var(--server-list-width)',
       },
     },
   },
   plugins: [],
-}
+};

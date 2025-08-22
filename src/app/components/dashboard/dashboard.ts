@@ -13,24 +13,4 @@ import { Groups } from '../../services/groups.service';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
-  private groupsService = inject(Groups);
-
-  groups: any[] = [];
-
-  ngOnInit(): void {
-    this.loadGroups();
-  }
-
-  loadGroups(): void {
-    this.groupsService.getUserGroups().subscribe({
-      next: (groups) => {
-        this.groups = groups;
-        console.log('Loaded groups:', groups);
-      },
-      error: (error) => {
-        console.error('Error loading groups:', error);
-      },
-    });
-  }
-}
+export class Dashboard {}

@@ -19,10 +19,11 @@
   },
   {
     "id": 3,
-    "name": "Chatto",
+    "name": "Random Stuff",
     "icon": "",
-    "owner": "",
-    "members": "",
-    "channels": ""
+    "owner": 2,
+    "members": [2],
+    "admins": [2],
+    "channels": [3, 4]
   }
 ]
