@@ -1,3 +1,7 @@
+/* TailwindCSS v4 import */
+@import 'tailwindcss';
+@config "../tailwind.config.js";
+
 /* Reset and base styles */
 * {
   margin: 0;
