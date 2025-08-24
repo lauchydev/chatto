@@ -8,6 +8,10 @@ import { User } from '../model/user.interface';
 export class Auth {
   private usersService = inject(UsersService);
 
+  getCurrentUser(): User | null {
+    return this.usersService.getCurrentUser();
+  }
+
   isAuthenticated(): boolean {
     let userData = localStorage.getItem('user');
     if (userData) {
@@ -23,7 +27,7 @@ export class Auth {
     return user?.roles?.includes('superadmin') === true;
   }
 
-  isGroupADmin(): boolean {
+  isGroupAdmin(): boolean {
     const user = this.usersService.getCurrentUser();
     return user?.roles?.includes('groupadmin') === true;
   }
@@ -31,10 +35,6 @@ export class Auth {
   hasRole(role: string): boolean {
     const user = this.usersService.getCurrentUser();
     return user?.roles?.includes(role) === true;
-  }
-
-  getCurrentUser(): User | null {
-    return this.usersService.getCurrentUser();
   }
 
   getUserId(): number | null {

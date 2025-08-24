@@ -13,7 +13,7 @@
               class="flex justify-center items-center w-12 h-12 bg-[var(--card)] text-white rounded-xl hover:bg-[var(--primary)] cursor-pointer group"
               (click)="toggleProfileDropdown()"
             >
-              @if (currentUser && currentUser.image !== "") {
+              @if (authService.getCurrentUser() && authService.getCurrentUser()?.image !== "") {
               <img src="default-avatar.svg" alt="" class="w-full h-full object-cover rounded-xl" />
 
               } @else {
@@ -33,7 +33,7 @@
                     class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
                     role="menuitem"
                   >
-                    <lucide-icon [img]="SettingsIcon" class="w-4 h-4 mr-2" />
+                    <lucide-icon [img]="SettingsIcon" name="Settings" class="w-4 h-4 mr-2" />
                     Settings
                   </a>
 
@@ -43,26 +43,28 @@
                     class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
                     role="menuitem"
                   >
-                    <lucide-icon [img]="UserIcon" class="w-4 h-4 mr-2" />
+                    <lucide-icon [img]="UserIcon" name="User" class="w-4 h-4 mr-2" />
                     Profile
                   </a>
                 </div>
 
+                @if (authService.isSuperAdmin()) {
                 <a
                   type="button"
                   (click)="goToAdmin()"
                   class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
                 >
-                  <lucide-icon [img]="ShieldIcon" class="w-4 h-4 mr-2"></lucide-icon>
+                  <lucide-icon [img]="ShieldIcon" name="Shield" class="w-4 h-4 mr-2"></lucide-icon>
                   Admin
                 </a>
+                }
 
                 <a
                   type="button"
                   (click)="logout()"
                   class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
                 >
-                  <lucide-icon [img]="LogOutIcon" class="w-4 h-4 mr-2"></lucide-icon>
+                  <lucide-icon [img]="LogOutIcon" name="LogOut" class="w-4 h-4 mr-2"></lucide-icon>
                   Logout
                 </a>
               </div>
@@ -74,14 +76,14 @@
           <div class="w-8 h-0.5 bg-[var(--border)] mx-auto my-2 rounded-full"></div>
 
           <!-- Loading state -->
-          @if (loading) {
+          @if (loading()) {
           <div class="flex justify-center">
             <div class="w-12 h-12 bg-[var(--muted)] rounded-2xl animate-pulse"></div>
           </div>
           }
 
           <!-- Error state -->
-          @if (error) {
+          @if (error()) {
           <div class="text-center">
             <div
               class="w-12 h-12 bg-[var(--destructive)] rounded-2xl flex items-center justify-center mx-auto"
@@ -92,17 +94,18 @@
           }
 
           <!-- Groups -->
-          @if (!loading && !error) { @for (group of groups; track group.id) {
+          @if (!loading() && !error()) { @for (group of groups(); track group.id) {
           <div class="relative group pt-1">
             <a
               href="#"
               class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-xl hover:bg-[var(--primary)] hover:text-white cursor-pointer ring-0"
-              [class.ring-2]="isGroupActive(group.id)"
-              [class.bg-[var(--primary)]]="isGroupActive(group.id)"
-              [class.border-transparent]="!isGroupActive(group.id)"
-              [class.text-white]="isGroupActive(group.id)"
+              [class.ring-2]="isSelectedGroup(group.id)"
+              [class.ring-white]="isSelectedGroup(group.id)"
+              [class.bg-[var(--primary)]]="isSelectedGroup(group.id)"
+              [class.border-transparent]="!isSelectedGroup(group.id)"
+              [class.text-white]="isSelectedGroup(group.id)"
               [title]="group.name"
-              (click)="selectGroup(group.id)"
+              (click)="setSelectedGroup(group.id)"
             >
               <!-- Setting default group image (first letter of each word) -->
               @if (!group.icon || group.icon === '') {
@@ -117,7 +120,7 @@
                 }
               </span>
               } @else {
-              <img [src]="group.icon" [alt]="group.name" class="w-8 h-8 rounded-xl" />
+              <img [src]="group.icon" [alt]="group.name" class="w-8 h-8 rounded-lg" />
               }
               <span
                 class="invisible group-hover:visible absolute left-full ml-4 top-1/2 -translate-y-1/2 rounded-md bg-[var(--popover)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--popover-foreground)] whitespace-nowrap z-50"
@@ -134,7 +137,7 @@
               href="#"
               class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-2xl hover:rounded-xl transition-all duration-200 relative hover:bg-[var(--success)] hover:text-white cursor-pointer"
             >
-              <lucide-icon [img]="PlusIcon" />
+              <lucide-icon [img]="PlusIcon" name="Plus" />
               <span
                 class="invisible group-hover:visible absolute left-full ml-4 top-1/2 -translate-y-1/2 rounded-md bg-[var(--popover)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--popover-foreground)] whitespace-nowrap z-50"
               >
@@ -152,7 +155,7 @@
       class="group relative flex w-full justify-center px-4 py-3 text-sm text-[var(--destructive)] hover:bg-[var(--destructive)] hover:text-white cursor-pointer transition-all duration-200"
       (click)="logout()"
     >
-      <lucide-icon [img]="LogOutIcon" class="w-4 h-4"></lucide-icon>
+      <lucide-icon [img]="LogOutIcon" name="Logout" class="w-4 h-4"></lucide-icon>
       <span
         class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded-sm bg-[var(--popover)] border border-[var(--border)] px-2 py-1.5 text-xs font-medium text-[var(--popover-foreground)] group-hover:visible"
       >

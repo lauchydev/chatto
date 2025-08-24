@@ -14,8 +14,8 @@ import { Auth } from '../../../services/auth.service';
   styleUrl: './group-list.css',
 })
 export class GroupList implements OnInit {
-  private groupsService = inject(Groups);
-  private authService = inject(Auth);
+  protected groupService = inject(Groups);
+  protected authService = inject(Auth);
   private router = inject(Router);
 
   // Icons
@@ -25,60 +25,24 @@ export class GroupList implements OnInit {
   readonly UserIcon = User;
   readonly PlusIcon = Plus;
 
-  groups: GroupApi[] = [];
-  loading = false;
-  error = '';
   isProfileDropdown = false;
-  activeGroupId: number | null = null;
+
+  error = this.groupService.error;
+  loading = this.groupService.loading;
+  groups = this.groupService.groups;
+  selectedGroupId = this.groupService.selectedGroupId;
 
   ngOnInit(): void {
-    this.loadGroups();
+    this.groupService.loadGroups();
   }
 
-  loadGroups(): void {
-    this.loading = true;
-    this.error = '';
-
-    this.groupsService.getUserGroups().subscribe({
-      next: (groups: GroupApi[]) => {
-        this.groups = groups;
-        this.loading = false;
-      },
-
-      error: (error) => {
-        console.error('Error loading groups: ', error);
-        this.error = 'Failed loading groups';
-        this.loading = false;
-      },
-    });
+  setSelectedGroup(groupId: number): void {
+    this.groupService.selectGroup(groupId);
   }
 
-  selectGroup(groupId: number): void {
-    this.activeGroupId = groupId;
+  isSelectedGroup(groupId: number): boolean {
+    return this.selectedGroupId() === groupId;
   }
-
-  isGroupActive(groupId: number): boolean {
-    return this.activeGroupId == groupId;
-  }
-
-  /**
-   *
-   *  User Getter Functions
-   *
-   */
-
-  get isSuperAdmin(): boolean {
-    return this.authService.isSuperAdmin();
-  }
-  get currentUser() {
-    return this.authService.getCurrentUser();
-  }
-
-  /**
-   *
-   *  Button Functionality
-   *
-   */
 
   toggleProfileDropdown(): void {
     this.isProfileDropdown = !this.isProfileDropdown;
