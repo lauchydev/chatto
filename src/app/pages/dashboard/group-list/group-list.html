@@ -1,0 +1,170 @@
+<div
+  class="flex h-screen w-16 flex-col justify-between border-e border-[var(--border)] bg-[var(--background)]"
+>
+  <div>
+    <div class="border-t border-[var(--border)]">
+      <div class="px-2">
+        <!-- Discord Style Server List -->
+        <div class="space-y-2 border-t border-[var(--border)] pt-4">
+          <!-- Profile -->
+          <div class="relative group">
+            <a
+              href="#"
+              class="flex justify-center items-center w-12 h-12 bg-[var(--card)] text-white rounded-xl hover:bg-[var(--primary)] cursor-pointer group"
+              (click)="toggleProfileDropdown()"
+            >
+              @if (authService.getCurrentUser() && authService.getCurrentUser()?.image !== "") {
+              <img src="default-avatar.svg" alt="" class="w-full h-full object-cover rounded-xl" />
+
+              } @else {
+              <img src="default-avatar.svg" alt="" />
+              }
+              <!-- Dropdown Menu -->
+              @if (isProfileDropdown) {
+              <div
+                role="menu"
+                class="absolute start-full top-0 z-50 ml-2.5 w-48 divide-y divide-[var(--border)] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--dropdown)] shadow-lg mt-5"
+                (click)="$event.stopPropagation()"
+              >
+                <div>
+                  <a
+                    type="button"
+                    (click)="goToSettings()"
+                    class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
+                    role="menuitem"
+                  >
+                    <lucide-icon [img]="SettingsIcon" name="Settings" class="w-4 h-4 mr-2" />
+                    Settings
+                  </a>
+
+                  <a
+                    type="button"
+                    (click)="goToProfile()"
+                    class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
+                    role="menuitem"
+                  >
+                    <lucide-icon [img]="UserIcon" name="User" class="w-4 h-4 mr-2" />
+                    Profile
+                  </a>
+                </div>
+
+                @if (authService.isSuperAdmin()) {
+                <a
+                  type="button"
+                  (click)="goToAdmin()"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
+                >
+                  <lucide-icon [img]="ShieldIcon" name="Shield" class="w-4 h-4 mr-2"></lucide-icon>
+                  Admin
+                </a>
+                }
+
+                <a
+                  type="button"
+                  (click)="logout()"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
+                >
+                  <lucide-icon [img]="LogOutIcon" name="LogOut" class="w-4 h-4 mr-2"></lucide-icon>
+                  Logout
+                </a>
+              </div>
+              }
+            </a>
+          </div>
+
+          <!-- Separator line (Discord style) -->
+          <div class="w-8 h-0.5 bg-[var(--border)] mx-auto my-2 rounded-full"></div>
+
+          <!-- Loading state -->
+          @if (loading()) {
+          <div class="flex justify-center">
+            <div class="w-12 h-12 bg-[var(--muted)] rounded-2xl animate-pulse"></div>
+          </div>
+          }
+
+          <!-- Error state -->
+          @if (error()) {
+          <div class="text-center">
+            <div
+              class="w-12 h-12 bg-[var(--destructive)] rounded-2xl flex items-center justify-center mx-auto"
+            >
+              <span class="text-white text-xs font-bold">!</span>
+            </div>
+          </div>
+          }
+
+          <!-- Groups -->
+          @if (!loading() && !error()) { @for (group of groups(); track group.id) {
+          <div class="relative group pt-1">
+            <a
+              href="#"
+              class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-xl hover:bg-[var(--primary)] hover:text-white cursor-pointer ring-0"
+              [class.ring-2]="isSelectedGroup(group.id)"
+              [class.ring-white]="isSelectedGroup(group.id)"
+              [class.bg-[var(--primary)]]="isSelectedGroup(group.id)"
+              [class.border-transparent]="!isSelectedGroup(group.id)"
+              [class.text-white]="isSelectedGroup(group.id)"
+              [title]="group.name"
+              (click)="setSelectedGroup(group.id)"
+            >
+              <!-- Setting default group image (first letter of each word) -->
+              @if (!group.icon || group.icon === '') {
+              <span class="text-lg font-bold">
+                @if (group.name.split(' ').length > 1) {
+                {{
+                  group.name.split(' ')[0].charAt(0).toUpperCase() +
+                    group.name.split(' ')[1].charAt(0).toUpperCase()
+                }}
+                } @else {
+                {{ group.name.charAt(0).toUpperCase() }}
+                }
+              </span>
+              } @else {
+              <img [src]="group.icon" [alt]="group.name" class="w-8 h-8 rounded-lg" />
+              }
+              <span
+                class="invisible group-hover:visible absolute left-full ml-4 top-1/2 -translate-y-1/2 rounded-md bg-[var(--popover)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--popover-foreground)] whitespace-nowrap z-50"
+              >
+                {{ group.name }}
+              </span>
+            </a>
+          </div>
+          } }
+
+          <!-- Add Server Button (Optional - Discord style) -->
+          <div class="relative group pt-1">
+            <a
+              href="#"
+              class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-2xl hover:rounded-xl transition-all duration-200 relative hover:bg-[var(--success)] hover:text-white cursor-pointer"
+            >
+              <lucide-icon [img]="PlusIcon" name="Plus" />
+              <span
+                class="invisible group-hover:visible absolute left-full ml-4 top-1/2 -translate-y-1/2 rounded-md bg-[var(--popover)] border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--popover-foreground)] whitespace-nowrap z-50"
+              >
+                Add a Server
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sticky inset-x-0 bottom-0 border-t border-[var(--border)] bg-[var(--background)]">
+    <a
+      class="group relative flex w-full justify-center px-4 py-3 text-sm text-[var(--destructive)] hover:bg-[var(--destructive)] hover:text-white cursor-pointer transition-all duration-200"
+      (click)="logout()"
+    >
+      <lucide-icon [img]="LogOutIcon" name="Logout" class="w-4 h-4"></lucide-icon>
+      <span
+        class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded-sm bg-[var(--popover)] border border-[var(--border)] px-2 py-1.5 text-xs font-medium text-[var(--popover-foreground)] group-hover:visible"
+      >
+        Logout
+      </span>
+    </a>
+  </div>
+</div>
+
+@if (isProfileDropdown) {
+<div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+}

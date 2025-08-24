@@ -24,6 +24,9 @@
 .login-header {
   text-align: center;
   margin-bottom: 24px; /* Put the logo away from the rest of the form */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .logo {
@@ -36,12 +39,16 @@
   font-weight: 600;
   color: var(--foreground);
   margin: 0 0 8px 0;
+
+  text-align: center;
 }
 
 .login-form p {
   color: var(--muted-foreground);
   font-size: 14px;
   margin: 0 0 24px 0;
+
+  text-align: center;
 }
 
 .form-group {
