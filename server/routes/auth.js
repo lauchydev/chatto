@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const User = require('../data/user.js');
-const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users.json'));
+const User = require('../data/users/user.js');
+const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
 
 router.post('', async (req, res) => {
   if (!req.body) {
@@ -21,8 +21,8 @@ router.post('', async (req, res) => {
       user.email = users[i].email;
       user.birthdate = users[i].birthdate;
       user.age = users[i].age;
-      users.groups = users[i].groups;
-      users.roles = users[i].roles;
+      user.groups = users[i].groups;
+      user.roles = users[i].roles;
       user.valid = true;
     }
   }

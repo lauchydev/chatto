@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Groups } from '../../../services/groups.service';
 import { Group, GroupApi } from '../../../model/group.interface';
@@ -6,17 +6,22 @@ import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { LogOut, Plus, Settings, Shield, User } from 'lucide-angular/src/icons';
 import { Auth } from '../../../services/auth.service';
+import { CreateGroupModal } from '../../../components/create-group-modal/create-group-modal';
+import { ChannelsService } from '../../../services/channels.service';
 
 @Component({
   selector: 'app-group-list',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, CreateGroupModal],
   templateUrl: './group-list.html',
   styleUrl: './group-list.css',
 })
 export class GroupList implements OnInit {
+  @ViewChild(CreateGroupModal) createGroupModal!: CreateGroupModal;
+
   protected groupService = inject(Groups);
   protected authService = inject(Auth);
   private router = inject(Router);
+  private channelsService = inject(ChannelsService);
 
   // Icons
   readonly SettingsIcon = Settings;
@@ -34,10 +39,19 @@ export class GroupList implements OnInit {
 
   ngOnInit(): void {
     this.groupService.loadGroups();
-  }
 
+    // Wait until a group is auto-selected, then load its channels once
+    const watchSelection = setInterval(() => {
+      const autoId = this.selectedGroupId();
+      if (autoId) {
+        this.channelsService.loadChannels(autoId);
+        clearInterval(watchSelection);
+      }
+    }, 50);
+  }
   setSelectedGroup(groupId: number): void {
     this.groupService.selectGroup(groupId);
+    this.channelsService.loadChannels(groupId);
   }
 
   isSelectedGroup(groupId: number): boolean {
@@ -50,6 +64,10 @@ export class GroupList implements OnInit {
 
   closeProfileDropdown(): void {
     this.isProfileDropdown = false;
+  }
+
+  openCreateGroupModal(): void {
+    this.createGroupModal.openModal();
   }
 
   goToSettings(): void {
