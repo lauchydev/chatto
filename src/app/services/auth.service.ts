@@ -23,7 +23,7 @@ export class Auth {
   }
 
   isSuperAdmin(): boolean {
-    const user = this.usersService.getCurrentUser();
+    const user = this.getCurrentUser();
     return user?.roles?.includes('superadmin') === true;
   }
 

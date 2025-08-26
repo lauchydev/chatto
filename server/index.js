@@ -9,5 +9,6 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/groups', require('./routes/groups'));
+app.use('/api/channels', require('./routes/channels'));
 
 app.listen(PORT);

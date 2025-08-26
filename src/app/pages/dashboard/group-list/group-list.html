@@ -131,11 +131,13 @@
           </div>
           } }
 
-          <!-- Add Server Button (Optional - Discord style) -->
+          <!-- Add Server Button -->
+          @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
           <div class="relative group pt-1">
             <a
               href="#"
               class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-2xl hover:rounded-xl transition-all duration-200 relative hover:bg-[var(--success)] hover:text-white cursor-pointer"
+              (click)="openCreateGroupModal()"
             >
               <lucide-icon [img]="PlusIcon" name="Plus" />
               <span
@@ -145,6 +147,7 @@
               </span>
             </a>
           </div>
+          }
         </div>
       </div>
     </div>
@@ -168,3 +171,5 @@
 @if (isProfileDropdown) {
 <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
 }
+
+<app-create-group-modal />

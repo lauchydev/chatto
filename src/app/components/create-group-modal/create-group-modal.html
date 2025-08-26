@@ -1,0 +1,84 @@
+@if (isOpen()) {
+<!-- Backdrop -->
+<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" (click)="closeModal()">
+  <!-- Modal Container -->
+  <div
+    class="bg-[var(--background)] border border-[var(--border)] rounded-lg shadow-lg w-full max-w-md mx-4"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-[var(--border)]">
+      <h2 class="text-lg font-semibold text-[var(--foreground)]">Create a Server</h2>
+      <button
+        class="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+        (click)="closeModal()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Form Content -->
+    <div class="p-4">
+      <form (ngSubmit)="createGroup()" #createGroupForm="ngForm">
+        <!-- Group Name Input -->
+        <div class="mb-4">
+          <label for="groupName" class="block text-sm font-medium text-[var(--foreground)] mb-2">
+            Server Name*
+          </label>
+          <input
+            type="text"
+            id="groupName"
+            name="groupName"
+            [(ngModel)]="groupName"
+            class="w-full px-3 py-2 bg-[var(--input)] border border-[var(--border)] rounded-md text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+            placeholder="Enter server name"
+            required
+          />
+        </div>
+
+        <!-- Group Image Input (Optional) -->
+        <div class="mb-6">
+          <label for="groupImage" class="block text-sm font-medium text-[var(--foreground)] mb-2">
+            Server Icon URL (Optional)
+          </label>
+          <input
+            type="url"
+            id="groupImage"
+            name="groupImage"
+            [(ngModel)]="groupImage"
+            class="w-full px-3 py-2 bg-[var(--input)] border border-[var(--border)] rounded-md text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+            placeholder="https://example.com/icon.png"
+          />
+        </div>
+
+        <!-- Error Message -->
+        @if (error()) {
+        <div
+          class="mb-4 p-3 bg-[var(--destructive)]/10 border border-[var(--destructive)] rounded-md"
+        >
+          <p class="text-sm text-[var(--destructive)]">{{ error() }}</p>
+        </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+            (click)="closeModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isLoading() || !groupName.trim()"
+            class="px-4 py-2 text-sm font-medium text-white bg-[var(--primary)] hover:bg-[var(--primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+          >
+            @if (isLoading()) { Creating... } @else { Create Server }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}

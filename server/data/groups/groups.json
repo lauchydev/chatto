@@ -1,0 +1,108 @@
+[
+  {
+    "id": 1,
+    "name": "Griffith",
+    "icon": "",
+    "owner": 1,
+    "members": [
+      1,
+      2,
+      3
+    ],
+    "admins": [
+      1,
+      2
+    ],
+    "channels": [
+      null,
+      null,
+      3,
+      1
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Gaming",
+    "icon": "",
+    "owner": 2,
+    "members": [
+      1,
+      2
+    ],
+    "admins": [
+      2
+    ],
+    "channels": [
+      3,
+      4
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Random Stuff",
+    "icon": "",
+    "owner": 2,
+    "members": [
+      2
+    ],
+    "admins": [
+      2
+    ],
+    "channels": [
+      3,
+      4
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Test Group",
+    "icon": "",
+    "owner": 1,
+    "members": [
+      1
+    ],
+    "admins": [
+      1
+    ],
+    "channels": []
+  },
+  {
+    "id": 5,
+    "name": "test server",
+    "icon": "",
+    "owner": 1,
+    "members": [
+      1
+    ],
+    "admins": [
+      1
+    ],
+    "channels": []
+  },
+  {
+    "id": 6,
+    "name": "test server",
+    "icon": "",
+    "owner": 1,
+    "members": [
+      1
+    ],
+    "admins": [
+      1
+    ],
+    "channels": []
+  },
+  {
+    "id": 7,
+    "name": "GROUP ADMIN",
+    "icon": "",
+    "owner": 2,
+    "members": [
+      2
+    ],
+    "admins": [
+      2
+    ],
+    "channels": []
+  }
+]

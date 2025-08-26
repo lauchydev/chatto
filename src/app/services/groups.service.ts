@@ -2,18 +2,19 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Group, GroupApi } from '../model/group.interface';
+import { User } from '../model/user.interface';
+import { Auth } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Groups {
   private http = inject(HttpClient);
-
   private _groups = signal<GroupApi[]>([]);
   private _loading = signal(false);
   private _error = signal('');
   private _selectedGroupId = signal<number | null>(null);
-
+  private authService = inject(Auth);
   readonly groups = this._groups.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
@@ -26,10 +27,8 @@ export class Groups {
     if (!userData) {
       throw new Error('No user data found');
     }
-
     const user = JSON.parse(userData);
     const userId = user.id;
-
     return this.http.get<GroupApi[]>(`${this.localurl}/api/groups?userId=${userId}`);
   }
 
@@ -40,6 +39,9 @@ export class Groups {
     this.getUserGroups().subscribe({
       next: (groups: GroupApi[]) => {
         this._groups.set(groups);
+        if (!this._selectedGroupId() && groups && groups.length > 0) {
+          this._selectedGroupId.set(groups[0].id);
+        }
         this._loading.set(false);
       },
       error: (error) => {
@@ -65,8 +67,9 @@ export class Groups {
   }
 
   // CRUD Operations (keep these - they belong here)
-  createGroup(name: string, image?: string): Observable<GroupApi> {
+  createGroup(name: string, id: Number, image?: string): Observable<GroupApi> {
     return this.http.post<GroupApi>(`${this.localurl}/api/groups`, {
+      id,
       name,
       image,
     });
@@ -91,5 +94,16 @@ export class Groups {
 
   clearSelection(): void {
     this._selectedGroupId.set(null);
+  }
+
+  isGroupOwner(): boolean {
+    const group = this.getSelectedGroup();
+    const userId = this.authService.getUserId();
+
+    if (userId) {
+      return this.authService.isSuperAdmin() || group?.owner === userId;
+    }
+
+    return false;
   }
 }
