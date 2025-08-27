@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Group, GroupApi } from '../model/group.interface';
-import { User } from '../model/user.interface';
 import { Auth } from './auth.service';
 
 @Injectable({

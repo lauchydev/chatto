@@ -6,7 +6,7 @@ import { authGuard } from './guards/auth-guard';
 import { loginGuard } from './guards/login-guard';
 
 export const routes: Routes = [
-  { path: '', component: Dashboard, title: 'Dashboard', canActivate: [authGuard] },
-  { path: 'login', component: Login, title: 'Login', canActivate: [loginGuard] },
-  { path: 'profile', component: Profile, title: 'Profile', canActivate: [authGuard] },
+  { path: '', component: Dashboard, title: 'Chatto | Dashboard', canActivate: [authGuard] },
+  { path: 'login', component: Login, title: 'Chatto | Login', canActivate: [loginGuard] },
+  { path: 'profile', component: Profile, title: 'Chatto | Profile', canActivate: [authGuard] },
 ];

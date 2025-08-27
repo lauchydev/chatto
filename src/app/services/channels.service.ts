@@ -18,6 +18,9 @@ export class ChannelsService {
       .get<Channel[]>(`http://localhost:3000/api/channels?groupId=${groupId}`)
       .subscribe((channels) => {
         this.channels.set(channels);
+        if (!this.selectedChannel() && channels.length) {
+          this.selectedChannel.set(channels[0].id);
+        }
       });
   }
 
@@ -42,8 +45,19 @@ export class ChannelsService {
   }
 
   deleteChannel(channelId: number): void {
-    this.http.delete(`http://localhost:3000/api/channels/${channelId}`).subscribe(() => {
-      this.channels.update((prev) => prev.filter((channel) => channel.id !== channelId));
-    });
+    const userData = localStorage.getItem('user');
+    const userId = userData ? JSON.parse(userData).id : null;
+    if (!userId) return;
+
+    this.http
+      .delete(`http://localhost:3000/api/channels/${channelId}?userId=${userId}`)
+      .subscribe(() => {
+        const wasSelected = this.selectedChannel() === channelId;
+        this.channels.update((prev) => prev.filter((c) => c.id !== channelId));
+        if (wasSelected) {
+          const next = this.channels()[0]?.id ?? null;
+          this.selectedChannel.set(next);
+        }
+      });
   }
 }

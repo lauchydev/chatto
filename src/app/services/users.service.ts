@@ -17,7 +17,7 @@ export class UsersService {
   // Get multiple users by their ID's
   getUsers(userIds: number[]): Observable<User[]> {
     const users = userIds.join(',');
-    return this.http.get<User[]>(`http://localhost:3000/api/users?ids=${users}`);
+    return this.http.get<User[]>(`http://localhost:3000/api/users/?ids=${users}`);
   }
 
   getCurrentUser(): User | null {

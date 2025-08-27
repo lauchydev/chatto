@@ -1,12 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { UsersService } from './users.service';
 import { User } from '../model/user.interface';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
   private usersService = inject(UsersService);
+  private router = inject(Router);
 
   getCurrentUser(): User | null {
     return this.usersService.getCurrentUser();
@@ -40,5 +42,10 @@ export class Auth {
   getUserId(): number | null {
     const user = this.getCurrentUser();
     return user?.id || null;
+  }
+
+  logout(): void {
+    localStorage.removeItem('user');
+    this.router.navigate(['login']);
   }
 }

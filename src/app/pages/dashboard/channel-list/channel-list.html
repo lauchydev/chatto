@@ -37,6 +37,8 @@
         </button>
 
         <!-- Ellipsis + dropdown container -->
+        @if (authService.isSuperAdmin() || authService.isGroupAdmin() ||
+        groupsService.isGroupOwner()) {
         <div class="relative">
           <!-- Ellipsis button (only show on hover) -->
           <button
@@ -61,6 +63,7 @@
           </div>
           }
         </div>
+        }
       </div>
       }
 
