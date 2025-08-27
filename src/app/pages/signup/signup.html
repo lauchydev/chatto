@@ -1,0 +1,135 @@
+<div class="h-screen w-screen flex justify-center items-center bg-[var(--background)]">
+  <div
+    class="w-[400px] max-w-[90%] p-8 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+  >
+    <!-- Header -->
+    <div class="text-center mb-6 flex justify-center items-center">
+      <img src="logo.svg" alt="Chatto Logo" class="h-8 w-auto" />
+    </div>
+
+    <!-- Signup Form -->
+    <form (ngSubmit)="onSubmit()" #signupForm="ngForm" novalidate class="space-y-0">
+      <h2 class="text-2xl font-semibold text-[var(--foreground)] mb-2 text-center">
+        Create Account
+      </h2>
+      <p class="text-[var(--muted-foreground)] text-sm mb-6 text-center">
+        Enter your information below to create your account
+      </p>
+
+      @if (errorMessage && !errorMessage.includes('Username')) {
+      <div
+        class="flex items-center gap-2 p-3 mb-4 bg-[rgba(237,66,69,0.1)] border border-[rgba(237,66,69,0.3)] rounded-md animate-[slideDown_0.3s_ease-out]"
+      >
+        <span class="text-sm text-[var(--destructive)] font-medium flex-1">{{ errorMessage }}</span>
+      </div>
+      }
+
+      <!-- Username Field -->
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1.5">Username</label>
+        <input
+          type="text"
+          name="username"
+          [(ngModel)]="newUser.username"
+          (blur)="checkUsername()"
+          required
+          minlength="3"
+          class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          placeholder="me@example.com"
+        />
+        @if (isCheckingUsername) {
+        <p class="text-blue-500 text-sm mt-1">Checking availability...</p>
+        } @if (errorMessage && errorMessage.includes('Username')) {
+        <p class="text-red-500 text-sm mt-1">{{ errorMessage }}</p>
+        }
+      </div>
+
+      <!-- Email Field -->
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1.5">Email</label>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="newUser.email"
+          required
+          class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          placeholder="Enter email"
+        />
+      </div>
+
+      <!-- Password Field -->
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1.5">Password</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="newUser.password"
+          required
+          minlength="3"
+          class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          placeholder="Enter password"
+        />
+      </div>
+
+      <!-- Optional Fields -->
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1.5">
+          Birthdate (Optional)
+        </label>
+        <input
+          type="date"
+          name="birthdate"
+          [(ngModel)]="newUser.birthdate"
+          class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+        />
+      </div>
+
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1.5">
+          Age (Optional)
+        </label>
+        <input
+          type="number"
+          name="age"
+          [(ngModel)]="newUser.age"
+          min="13"
+          max="120"
+          class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          placeholder="Enter age"
+        />
+      </div>
+
+      <!-- Submit Button -->
+      <a
+        (click)="canSubmit() ? null : onSubmit()"
+        role="button"
+        [tabindex]="canSubmit() ? -1 : 0"
+        (keydown.enter)="canSubmit() ? null : onSubmit()"
+        (keydown.space)="canSubmit() ? null : onSubmit()"
+        [class]="
+          'w-full py-3 px-6 mt-2 border-0 rounded-lg text-sm font-medium font-inherit transition-[background-color] duration-200 ease-linear appearance-none outline-none focus:outline-none flex justify-center items-center ' +
+          (canSubmit()
+            ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+            : 'bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer hover:bg-[#4752c4] active:translate-y-px')
+        "
+      >
+        Create Account
+      </a>
+    </form>
+
+    <!-- Login Link -->
+    <div
+      class="mt-4 pt-4 -mb-12 pb-8 border-t border-[var(--border)] text-center flex flex-row justify-center items-center gap-2"
+    >
+      <span class="text-[var(--muted-foreground)] text-sm font-normal"
+        >Already have an account?</span
+      >
+      <a
+        (click)="goToLogin()"
+        class="text-[var(--primary)] underline underline-offset-1 font-medium text-sm transition-all duration-200 ease-linear inline hover:opacity-80 cursor-pointer"
+      >
+        Sign in
+      </a>
+    </div>
+  </div>
+</div>

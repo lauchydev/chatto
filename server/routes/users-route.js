@@ -27,6 +27,17 @@ router.get('/', (req, res) => {
   return res.status(200).json(users);
 });
 
+// GET /api/users/check-username/:username
+router.get('/check-username/:username', (req, res) => {
+  const username = req.params.username.toLowerCase().trim();
+
+  if (!username) {
+    return res.status(400).json({ error: 'Username is required' });
+  }
+  const existingUser = users.find((user) => user.username.toLowerCase() === username);
+  res.json({ exists: !!existingUser });
+});
+
 // PUT /api/users/:id
 router.put('/:id', (req, res) => {
   const userId = parseInt(req.params.id);
@@ -39,6 +50,59 @@ router.put('/:id', (req, res) => {
   const usersPath = path.join(__dirname, '../data/users/users.json');
   fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
   res.status(200).json(users[userIndex]);
+});
+
+// POST /api/users (Create new user)
+router.post('/', (req, res) => {
+  try {
+    const { username, email, password, birthdate, age, roles, groups } = req.body;
+
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    // Check if username or email already exists
+    const existingUser = users.find(
+      (user) =>
+        user.username.toLowerCase() === username.toLowerCase() ||
+        user.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username or email already exists' });
+    }
+
+    // Generate new ID
+    const newId = Math.max(...users.map((u) => u.id), 0) + 1;
+
+    // Create new user
+    const newUser = {
+      id: newId,
+      username: username,
+      email: email,
+      password: password,
+      birthdate: birthdate || '',
+      age: age || null,
+      roles: roles || ['user'],
+      groups: groups || [],
+      valid: true,
+    };
+
+    // Add to users array
+    users.push(newUser);
+
+    // Save to file
+    const usersPath = path.join(__dirname, '../data/users/users.json');
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+    // Return user without password
+    const { password: _, ...userResponse } = newUser;
+    res.status(201).json(userResponse);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
 });
 
 // DELETE /api/users/:id

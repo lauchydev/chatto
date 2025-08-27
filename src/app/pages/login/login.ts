@@ -1,26 +1,42 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
 
   email = '';
   password = '';
 
   errorMessage = '';
+  successMessage = '';
+
+  ngOnInit(): void {
+    // Check for account creation success
+    this.route.queryParams.subscribe((params) => {
+      if (params['accountCreated'] === 'true') {
+        this.successMessage = 'Account created successfully! Please log in.';
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true,
+        });
+      }
+    });
+  }
 
   validateUser(form: NgForm) {
-    // Clear error message
     this.errorMessage = '';
+    this.successMessage = '';
 
     this.http
       .post('http://localhost:3000/api/auth', {

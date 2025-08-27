@@ -42,4 +42,14 @@ export class UsersService {
   deleteUser(userId: number): Observable<User> {
     return this.http.delete<User>(`http://localhost:3000/api/users/${userId}`);
   }
+
+  checkUsername(username: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(
+      `http://localhost:3000/api/users/check-username/${username}`
+    );
+  }
+
+  createUser(user: any): Observable<User> {
+    return this.http.post<User>(`http://localhost:3000/api/users`, user);
+  }
 }
