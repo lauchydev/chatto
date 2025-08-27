@@ -70,11 +70,6 @@ export class GroupList implements OnInit {
     this.createGroupModal.openModal();
   }
 
-  goToSettings(): void {
-    this.closeProfileDropdown();
-    this.router.navigate(['settings']);
-  }
-
   goToAdmin(): void {
     this.closeProfileDropdown();
     this.router.navigate(['admin']);
@@ -87,7 +82,6 @@ export class GroupList implements OnInit {
 
   logout(): void {
     this.isProfileDropdown = false;
-    localStorage.removeItem('user');
-    this.router.navigate(['login']);
+    this.authService.logout();
   }
 }

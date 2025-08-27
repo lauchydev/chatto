@@ -38,6 +38,9 @@ const isGroupOwner = async (req, res, next) => {
   }
 };
 
+/**
+ * Get Channels
+ */
 router.get('/', (req, res) => {
   const groupId = parseInt(req.query.groupId, 10);
   if (!Number.isInteger(groupId)) {
@@ -53,6 +56,9 @@ router.get('/', (req, res) => {
   res.send(channels.filter((c) => c.groupId === groupId));
 });
 
+/**
+ * Create Channel
+ */
 router.post('/', (req, res) => {
   let name = (req.body.name || '').trim();
   name = name.replace(' ', '-');
@@ -88,11 +94,18 @@ router.post('/', (req, res) => {
   res.status(201).json(channel);
 });
 
-// Delete a channel by id
-router.delete('/:id', isGroupOwner, (req, res) => {
+/**
+ * Delete Channel
+ */
+router.delete('/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
+  const userId = parseInt(req.query.userId, 10); // pass from frontend
+
   if (!Number.isInteger(id)) {
     return res.status(400).send({ error: 'Channel ID is invalid' });
+  }
+  if (!Number.isInteger(userId)) {
+    return res.status(400).send({ error: 'User ID is invalid' });
   }
 
   const channels = loadChannels();
@@ -100,15 +113,34 @@ router.delete('/:id', isGroupOwner, (req, res) => {
   if (index === -1) {
     return res.status(404).send({ error: 'Channel not found' });
   }
+  const removed = channels[index];
 
-  // Remove the channel
-  const [removed] = channels.splice(index, 1);
-  fs.writeFileSync(channelsPath, JSON.stringify(channels, null, 2));
+  // Load users and groups to check permissions
+  const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return res.status(404).send({ error: 'User not found' });
+  }
 
-  // Remove channel reference from its group
   const groups = loadGroups();
   const group = groups.find((g) => g.id === removed.groupId);
-  if (group && Array.isArray(group.channels)) {
+  if (!group) {
+    return res.status(404).send({ error: 'Parent group not found' });
+  }
+
+  const isSuper = user.roles?.includes('superadmin');
+  const isOwner = group.owner === userId;
+  const isAdmin = Array.isArray(group.admins) && group.admins.includes(userId);
+  if (!isSuper && !isOwner && !isAdmin) {
+    return res.status(403).send({ error: 'Not authorized to delete this channel' });
+  }
+
+  // Remove channel and persist
+  channels.splice(index, 1);
+  fs.writeFileSync(channelsPath, JSON.stringify(channels, null, 2));
+
+  // Remove reference from group
+  if (Array.isArray(group.channels)) {
     group.channels = group.channels.filter((cid) => cid !== id);
     fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
   }

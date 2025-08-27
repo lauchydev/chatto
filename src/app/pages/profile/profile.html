@@ -1,1 +1,254 @@
-<p>profile works!</p>
+<div class="min-h-screen p-8 bg-[var(--background)] flex justify-center items-start">
+  <div
+    class="w-full max-w-4xl bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 shadow-lg"
+  >
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8 pb-6 border-b border-[var(--border)]">
+      <!-- Add back button -->
+      <div class="flex items-center gap-4">
+        <a
+          class="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors duration-200 cursor-pointer"
+          (click)="goToDashboard()"
+          title="Back to Dashboard"
+        >
+          <svg
+            class="w-5 h-5 text-[var(--foreground)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-[var(--foreground)]">Profile Settings</h1>
+      </div>
+      <div class="flex gap-3">
+        @if (!editMode) {
+        <a
+          class="px-6 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-semibold text-sm uppercase tracking-wide hover:opacity-90 transition-all duration-200 cursor-pointer"
+          (click)="toggleEditMode()"
+        >
+          Edit Profile
+        </a>
+        }
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    @if (user) {
+    <div class="flex flex-col gap-8">
+      <!-- Form Grid -->
+      <form #profileForm="ngForm" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- ID Field (Always disabled) -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              User ID
+            </label>
+            <input
+              type="text"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] cursor-not-allowed opacity-60"
+              [value]="user.id"
+              disabled
+            />
+          </div>
+
+          <!-- Username Field -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Username*
+            </label>
+            <input
+              type="text"
+              name="username"
+              #usernameField="ngModel"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] transition-all duration-200 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+              [class.bg-[var(--muted)]]="!editMode"
+              [class.text-[var(--muted-foreground)]]="!editMode"
+              [class.cursor-not-allowed]="!editMode"
+              [class.border-red-500]="
+                editMode && ((usernameField.invalid && usernameField.touched) || usernameError)
+              "
+              [(ngModel)]="user.username"
+              [readonly]="!editMode"
+              (blur)="editMode && checkUsername()"
+              required
+            />
+            @if (editMode && isCheckingUsername) {
+            <span class="text-blue-500 text-xs mt-1">Checking username availability...</span>
+            } @if (editMode && usernameError) {
+            <span class="text-red-500 text-xs mt-1">{{ usernameError }}</span>
+            } @if (editMode && usernameField.invalid && usernameField.touched && !usernameError &&
+            !isCheckingUsername) {
+            <span class="text-red-500 text-xs mt-1">Username is required</span>
+            }
+          </div>
+
+          <!-- Email Field -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Email*
+            </label>
+            <input
+              type="email"
+              name="email"
+              #emailField="ngModel"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] transition-all duration-200 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+              [class.bg-[var(--muted)]]="!editMode"
+              [class.text-[var(--muted-foreground)]]="!editMode"
+              [class.cursor-not-allowed]="!editMode"
+              [class.border-red-500]="editMode && emailField.invalid && emailField.touched"
+              [(ngModel)]="user.email"
+              [readonly]="!editMode"
+              required
+              email
+            />
+            @if (editMode && emailField.invalid && emailField.touched) {
+            <span class="text-red-500 text-xs mt-1">
+              @if (emailField.errors?.['required']) { Email is required } @if
+              (emailField.errors?.['email']) { Please enter a valid email address }
+            </span>
+            }
+          </div>
+
+          <!-- Age Field -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Age
+            </label>
+            <input
+              type="number"
+              name="age"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] transition-all duration-200 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+              [class.bg-[var(--muted)]]="!editMode"
+              [class.text-[var(--muted-foreground)]]="!editMode"
+              [class.cursor-not-allowed]="!editMode"
+              [(ngModel)]="user.age"
+              [readonly]="!editMode"
+            />
+          </div>
+
+          <!-- Birthdate Field -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Birthdate
+            </label>
+            <input
+              type="date"
+              name="birthdate"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] transition-all duration-200 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 max-w-md"
+              [class.bg-[var(--muted)]]="!editMode"
+              [class.text-[var(--muted-foreground)]]="!editMode"
+              [class.cursor-not-allowed]="!editMode"
+              [(ngModel)]="user.birthdate"
+              [readonly]="!editMode"
+            />
+          </div>
+
+          <!-- Password Field -->
+          <div class="flex flex-col gap-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Password*
+            </label>
+            <input
+              type="password"
+              name="password"
+              #passwordField="ngModel"
+              class="p-3 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] transition-all duration-200 focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 max-w-md"
+              [class.bg-[var(--muted)]]="!editMode"
+              [class.text-[var(--muted-foreground)]]="!editMode"
+              [class.cursor-not-allowed]="!editMode"
+              [class.border-red-500]="editMode && passwordField.invalid && passwordField.touched"
+              [(ngModel)]="user.password"
+              [readonly]="!editMode"
+              placeholder="Enter new password"
+              required
+              minlength="3"
+            />
+            @if (editMode && passwordField.invalid && passwordField.touched) {
+            <span class="text-red-500 text-xs mt-1">
+              @if (passwordField.errors?.['required']) { Password is required } @if
+              (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
+            </span>
+            } @if (editMode && passwordField.valid) {
+            <small class="text-[var(--muted-foreground)] text-xs">
+              Leave blank to keep current password
+            </small>
+            }
+          </div>
+
+          <!-- Roles Display (Read-only) -->
+          <div class="flex flex-col gap-2 md:col-span-2">
+            <label class="font-semibold text-sm text-[var(--foreground)] uppercase tracking-wide">
+              Roles
+            </label>
+            <div class="flex flex-wrap gap-2">
+              @for (role of user.roles; track role) {
+              <span
+                class="inline-block px-3 py-1 bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-full text-sm font-medium"
+              >
+                {{ role }}
+              </span>
+              }
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Action Buttons -->
+      <div>
+        @if (editMode) {
+        <div class="flex flex-col gap-6 pt-6 border-t border-[var(--border)]">
+          <!-- Edit Mode Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a
+              class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-green-700 transition-all duration-200 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+              [class.bg-gray-400]="profileForm.invalid || usernameError || isCheckingUsername"
+              [class.cursor-not-allowed]="
+                profileForm.invalid || usernameError || isCheckingUsername
+              "
+              [class.hover:bg-gray-400]="profileForm.invalid || usernameError || isCheckingUsername"
+              (click)="onSaveChanges()"
+            >
+              Save Changes
+            </a>
+            <a
+              class="px-6 py-3 bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-[var(--accent)] transition-all duration-200 cursor-pointer"
+              (click)="cancelChanges()"
+            >
+              Cancel
+            </a>
+          </div>
+        </div>
+        }
+
+        <!-- Delete Section -->
+        <div class="mt-4 pt-4 border-t border-[var(--border)]">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div>
+              <h4 class="text-sm font-medium text-[var(--foreground)] mb-1">Delete Account</h4>
+              <p class="text-xs text-[var(--muted-foreground)]">This action cannot be undone</p>
+            </div>
+            <a
+              class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-red-700 transition-all duration-200 self-start sm:self-auto cursor-pointer"
+              (click)="deleteProfile()"
+            >
+              Delete Account
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <!-- Loading State -->
+    <div class="text-center py-12">
+      <p class="text-[var(--muted-foreground)] text-lg">Loading profile...</p>
+    </div>
+    }
+  </div>
+</div>

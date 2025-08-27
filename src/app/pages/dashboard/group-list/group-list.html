@@ -9,7 +9,7 @@
           <!-- Profile -->
           <div class="relative group">
             <a
-              href="#"
+              type="button"
               class="flex justify-center items-center w-12 h-12 bg-[var(--card)] text-white rounded-xl hover:bg-[var(--primary)] cursor-pointer group"
               (click)="toggleProfileDropdown()"
             >
@@ -27,7 +27,7 @@
                 (click)="$event.stopPropagation()"
               >
                 <div>
-                  <a
+                  <!--                   <a
                     type="button"
                     (click)="goToSettings()"
                     class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
@@ -35,7 +35,7 @@
                   >
                     <lucide-icon [img]="SettingsIcon" name="Settings" class="w-4 h-4 mr-2" />
                     Settings
-                  </a>
+                  </a> -->
 
                   <a
                     type="button"
@@ -97,7 +97,7 @@
           @if (!loading() && !error()) { @for (group of groups(); track group.id) {
           <div class="relative group pt-1">
             <a
-              href="#"
+              type="button"
               class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-xl hover:bg-[var(--primary)] hover:text-white cursor-pointer ring-0"
               [class.ring-2]="isSelectedGroup(group.id)"
               [class.ring-white]="isSelectedGroup(group.id)"
@@ -135,7 +135,7 @@
           @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
           <div class="relative group pt-1">
             <a
-              href="#"
+              type="button"
               class="flex justify-center items-center w-12 h-12 bg-[var(--muted)] text-[var(--muted-foreground)] rounded-2xl hover:rounded-xl transition-all duration-200 relative hover:bg-[var(--success)] hover:text-white cursor-pointer"
               (click)="openCreateGroupModal()"
             >

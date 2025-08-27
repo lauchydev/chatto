@@ -17,7 +17,7 @@ export class UsersService {
   // Get multiple users by their ID's
   getUsers(userIds: number[]): Observable<User[]> {
     const users = userIds.join(',');
-    return this.http.get<User[]>(`http://localhost:3000/api/users?ids=${users}`);
+    return this.http.get<User[]>(`http://localhost:3000/api/users/?ids=${users}`);
   }
 
   getCurrentUser(): User | null {
@@ -41,5 +41,15 @@ export class UsersService {
 
   deleteUser(userId: number): Observable<User> {
     return this.http.delete<User>(`http://localhost:3000/api/users/${userId}`);
+  }
+
+  checkUsername(username: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(
+      `http://localhost:3000/api/users/check-username/${username}`
+    );
+  }
+
+  createUser(user: any): Observable<User> {
+    return this.http.post<User>(`http://localhost:3000/api/users`, user);
   }
 }

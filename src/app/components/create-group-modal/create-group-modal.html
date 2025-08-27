@@ -62,20 +62,23 @@
 
         <!-- Action Buttons -->
         <div class="flex justify-end gap-3">
-          <button
+          <a
             type="button"
-            class="px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+            class="px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
             (click)="closeModal()"
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            [disabled]="isLoading() || !groupName.trim()"
-            class="px-4 py-2 text-sm font-medium text-white bg-[var(--primary)] hover:bg-[var(--primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+          </a>
+          <a
+            (click)="createGroup()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="createGroup()"
+            (keydown.space)="createGroup()"
+            class="px-4 py-2 text-sm font-medium text-white bg-[var(--primary)] hover:bg-[var(--primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors cursor-pointer"
           >
             @if (isLoading()) { Creating... } @else { Create Server }
-          </button>
+          </a>
         </div>
       </form>
     </div>

@@ -77,6 +77,40 @@ router.post('/', (req, res) => {
   }
 });
 
+// Delete a user from a group
+router.delete('/:groupId/users/:userId', (req, res) => {
+  const groupId = parseInt(req.params.groupId);
+  const userId = parseInt(req.params.userId);
+
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found' });
+  }
+
+  group.members = group.members.filter((m) => m !== userId);
+  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+
+  res.status(200).json({ message: 'User removed from group' });
+});
+
+// Delete a user from all groups
+router.delete('/:userId', (req, res) => {
+  const userId = parseInt(req.params.userId);
+  groups.forEach((group) => {
+    group.members = group.members.filter((m) => m !== userId);
+  });
+  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+  res.status(200).json({ message: 'User removed from all groups' });
+});
+
+// Delete a group
+router.delete('/:groupId', (req, res) => {
+  const groupId = parseInt(req.params.groupId);
+  groups = groups.filter((g) => g.id !== groupId);
+  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+  res.status(200).json({ message: 'Group deleted' });
+});
+
 // get group by id
 
 module.exports = router;

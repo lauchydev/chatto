@@ -9,7 +9,11 @@
       <h2>Login to your account</h2>
       <p>Enter your email below to login to your account</p>
 
-      @if (errorMessage) {
+      @if (successMessage) {
+      <div class="success-message">
+        <span class="success-text">{{ successMessage }}</span>
+      </div>
+      } @if (errorMessage) {
       <div class="error-message">
         <span class="error-text">{{ errorMessage }}</span>
       </div>
@@ -37,6 +41,10 @@
         />
       </div>
       <button type="submit" class="login-button">Login</button>
+      <div class="signup-section">
+        <span class="signup-text">Don&apos;t have an account?</span>
+        <a [routerLink]="['/signup']" class="signup-link">Sign up</a>
+      </div>
     </form>
   </div>
 </div>
