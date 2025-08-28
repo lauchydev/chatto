@@ -30,17 +30,24 @@
         <input
           type="text"
           name="username"
+          #usernameField="ngModel"
           [(ngModel)]="newUser.username"
           (blur)="checkUsername()"
           required
           minlength="3"
           class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
-          placeholder="me@example.com"
+          [class.border-red-500]="(usernameField.invalid && usernameField.touched) || usernameError"
+          placeholder="Enter username"
         />
         @if (isCheckingUsername) {
         <p class="text-blue-500 text-sm mt-1">Checking availability...</p>
-        } @if (errorMessage && errorMessage.includes('Username')) {
-        <p class="text-red-500 text-sm mt-1">{{ errorMessage }}</p>
+        } @else if (usernameError) {
+        <p class="text-red-500 text-sm mt-1">{{ usernameError }}</p>
+        } @else if (usernameField.invalid && usernameField.touched) {
+        <p class="text-red-500 text-sm mt-1">
+          @if (usernameField.errors?.['required']) { Username is required }
+          @if (usernameField.errors?.['minlength']) { Username must be at least 3 characters long }
+        </p>
         }
       </div>
 
@@ -50,11 +57,19 @@
         <input
           type="email"
           name="email"
+          #emailField="ngModel"
           [(ngModel)]="newUser.email"
           required
           class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          [class.border-red-500]="emailField.invalid && emailField.touched"
           placeholder="Enter email"
         />
+        @if (emailField.invalid && emailField.touched) {
+        <p class="text-red-500 text-sm mt-1">
+          @if (emailField.errors?.['required']) { Email is required }
+          @if (emailField.errors?.['email']) { Please enter a valid email address }
+        </p>
+        }
       </div>
 
       <!-- Password Field -->
@@ -63,12 +78,20 @@
         <input
           type="password"
           name="password"
+          #passwordField="ngModel"
           [(ngModel)]="newUser.password"
           required
           minlength="3"
           class="w-full p-3 bg-[var(--input)] border border-[var(--border)] text-[var(--foreground)] rounded-lg text-sm font-inherit outline-none transition-[border-color] duration-200 ease-linear placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+          [class.border-red-500]="passwordField.invalid && passwordField.touched"
           placeholder="Enter password"
         />
+        @if (passwordField.invalid && passwordField.touched) {
+        <p class="text-red-500 text-sm mt-1">
+          @if (passwordField.errors?.['required']) { Password is required }
+          @if (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
+        </p>
+        }
       </div>
 
       <!-- Optional Fields -->

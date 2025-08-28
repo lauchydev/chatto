@@ -1,8 +1,6 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
 import { UsersService } from '../../services/users.service';
 
 @Component({
@@ -13,7 +11,6 @@ import { UsersService } from '../../services/users.service';
 })
 export class Signup {
   private router = inject(Router);
-  private http = inject(HttpClient);
   private usersService = inject(UsersService);
 
   protected newUser = {
@@ -26,35 +23,39 @@ export class Signup {
 
   protected errorMessage: string = '';
   protected isCheckingUsername = false;
+  protected usernameError: string = '';
 
   canSubmit(): boolean {
     return (
       !this.newUser.username ||
+      this.newUser.username.length < 3 ||
       !this.newUser.email ||
       !this.newUser.password ||
-      this.errorMessage !== '' ||
+      this.usernameError !== '' ||
       this.isCheckingUsername
     );
   }
 
   checkUsername(): void {
     if (!this.newUser.username || this.newUser.username.length < 3) {
-      this.errorMessage = '';
+      this.usernameError = '';
       return;
     }
 
     this.isCheckingUsername = true;
+    this.usernameError = '';
     this.usersService.checkUsername(this.newUser.username).subscribe({
       next: (result) => {
         if (result.exists) {
-          this.errorMessage = 'Username already exists';
+          this.usernameError = 'Username already exists';
         } else {
-          this.errorMessage = '';
+          this.usernameError = '';
         }
         this.isCheckingUsername = false;
       },
       error: (error) => {
         console.error('Username check failed:', error);
+        this.usernameError = 'Error checking username';
         this.isCheckingUsername = false;
       },
     });
@@ -95,12 +96,21 @@ export class Signup {
   }
 
   onSubmit(): void {
-    if (this.errorMessage || !this.newUser.username) {
-      console.log('Invalid username or password');
+    if (
+      !this.newUser.username ||
+      this.newUser.username.length < 3 ||
+      this.usernameError ||
+      this.isCheckingUsername
+    ) {
+      this.errorMessage = 'Please resolve username errors';
       return;
     }
-    if (!this.newUser.email || !this.newUser.password) {
-      this.errorMessage = 'Please fill in all required fields';
+    if (!this.newUser.email) {
+      this.errorMessage = 'Email is required';
+      return;
+    }
+    if (!this.newUser.password || this.newUser.password.length < 3) {
+      this.errorMessage = 'Password must be at least 3 characters long';
       return;
     }
     this.createUser();
