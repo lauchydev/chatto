@@ -8,4 +8,6 @@ export interface User {
   roles: string[];
   password: string;
   valid: boolean;
+  banned?: boolean;
+  reported?: boolean;
 }

@@ -18,8 +18,7 @@ export class Auth {
     let userData = localStorage.getItem('user');
     if (userData) {
       const user = JSON.parse(userData);
-      const valid: boolean = user.valid;
-      return valid;
+      return user?.valid === true && user?.banned !== true;
     }
     return false;
   }

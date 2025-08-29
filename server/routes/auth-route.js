@@ -16,13 +16,17 @@ router.post('', async (req, res) => {
       (req.body.email == users[i].email || req.body.email == users[i].username) &&
       req.body.password == users[i].password
     ) {
+      if (users[i].banned === true) {
+        return res.send({ valid: false, banned: true });
+      }
       user.id = users[i].id;
       user.username = users[i].username;
       user.email = users[i].email;
       user.birthdate = users[i].birthdate;
       user.age = users[i].age;
-      user.groups = users[i].groups;
       user.roles = users[i].roles;
+      user.banned = users[i].banned === true;
+      user.reported = users[i].reported;
       user.valid = true;
     }
   }

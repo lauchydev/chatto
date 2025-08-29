@@ -62,15 +62,14 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
-    // Check if username or email already exists
+    // Check if username already exists
     const existingUser = users.find(
       (user) =>
-        user.username.toLowerCase() === username.toLowerCase() ||
-        user.email.toLowerCase() === email.toLowerCase()
+        user.username.toLowerCase() === username.toLowerCase()
     );
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Username or email already exists' });
+      return res.status(400).json({ error: 'Username already exists' });
     }
 
     // Generate new ID
@@ -85,8 +84,9 @@ router.post('/', (req, res) => {
       birthdate: birthdate || '',
       age: age || null,
       roles: roles || ['user'],
-      groups: groups || [],
       valid: true,
+      banned: false,
+      reported: false,
     };
 
     // Add to users array

@@ -45,6 +45,10 @@ export class Login implements OnInit {
       })
       .subscribe({
         next: (response: any) => {
+          if (response.banned === true) {
+            this.errorMessage = 'Your account is banned';
+            return;
+          }
           if (response.valid) {
             localStorage.setItem('user', JSON.stringify(response));
 

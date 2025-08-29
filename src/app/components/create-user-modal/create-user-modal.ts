@@ -106,7 +106,7 @@ export class CreateUserModal {
         this.closeModal();
         setTimeout(() => {
           window.location.reload();
-        }, 50)
+        }, 150)
       },
       error: (error) => {
         console.error('Failed to create user:', error);

@@ -117,7 +117,7 @@
                 <a
                   class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
                   title="Delete User"
-                  (click)="deleteUser(user.id)"
+                  (click)="confirmDeleteUser(user.id, user.username)"
                 >
                   <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
                 </a>
@@ -180,7 +180,7 @@
                 <a
                   class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
                   title="Delete User"
-                  (click)="deleteUser(user.id)"
+                  (click)="confirmDeleteUser(user.id, user.username)"
                 >
                   <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
                 </a>
@@ -234,7 +234,7 @@
                 <a
                   class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
                   title="Delete User"
-                  (click)="deleteUser(user.id)"
+                  (click)="confirmDeleteUser(user.id, user.username)"
                 >
                   <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
                 </a>
@@ -252,4 +252,8 @@
       }
     </div>
   <app-create-user-modal />
+  <app-confirm-modal
+    #deleteConfirm
+    (confirmed)="onConfirmDeleteUser()"
+  ></app-confirm-modal>
   </div>

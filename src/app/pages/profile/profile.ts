@@ -5,10 +5,11 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { User } from '../../model/user.interface';
 import { Router } from '@angular/router';
+import { ConfirmModal } from '../../components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, ConfirmModal],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -18,6 +19,7 @@ export class Profile implements OnInit, OnDestroy {
   protected router = inject(Router);
 
   @ViewChild('profileForm') profileForm!: NgForm;
+  @ViewChild('deleteProfileConfirm') deleteProfileConfirm!: ConfirmModal;
 
   // User data
   protected user: User | null = null;
@@ -136,19 +138,21 @@ export class Profile implements OnInit, OnDestroy {
     }
   }
 
-  deleteProfile(): void {
-    if (this.user) {
-      const confirmed = confirm('Are you sure you want to delete your profile?');
-      if (confirmed) {
-        this.userService.deleteUser(this.user.id).subscribe({
-          next: () => {
-            this.authService.logout();
-          },
-          error: (error) => {
-            console.error('Failed to delete user: ', error);
-          },
-        });
-      }
-    }
+  openDeleteProfile(): void {
+    this.deleteProfileConfirm.title = 'Delete Account';
+    this.deleteProfileConfirm.message = 'Are you sure you want to delete your profile?';
+    this.deleteProfileConfirm.confirmText = 'Delete Account';
+    this.deleteProfileConfirm.cancelText = 'Cancel';
+    this.deleteProfileConfirm.destructive = true;
+  
+    this.deleteProfileConfirm.openModal();
+  }
+  
+  confirmDeleteProfile(): void {
+    if (!this.user) return;
+    this.userService.deleteUser(this.user.id).subscribe({
+      next: () => this.authService.logout(),
+      error: (error) => console.error('Failed to delete user: ', error),
+    });
   }
 }

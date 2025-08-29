@@ -9,9 +9,6 @@
 # Node
 /node_modules
 /server/node_modules
-/server/data/users/users.json
-/server/data/groups/groups.json
-/server/data/channels/channels.json
 npm-debug.log
 yarn-error.log
 

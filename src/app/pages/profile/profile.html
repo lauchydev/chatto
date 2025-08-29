@@ -236,7 +236,7 @@
             </div>
             <a
               class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-red-700 transition-all duration-200 self-start sm:self-auto cursor-pointer"
-              (click)="deleteProfile()"
+              (click)="openDeleteProfile()"
             >
               Delete Account
             </a>
@@ -252,3 +252,8 @@
     }
   </div>
 </div>
+
+<app-confirm-modal
+  #deleteProfileConfirm
+  (confirmed)="confirmDeleteProfile()"
+></app-confirm-modal>
