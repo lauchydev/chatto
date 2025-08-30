@@ -4,10 +4,19 @@ const fs = require('fs');
 const path = require('path');
 
 const Group = require('../data/groups/group.js');
+const e = require('express');
 let groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
 const groupsPath = path.join(__dirname, '../data/groups/groups.json');
 
-// Get group list
+/**
+ *
+ *        GET
+ *
+ */
+
+/**
+ *  Get global group lists
+ */
 router.get('/', async (req, res) => {
   const userId = parseInt(req.query.userId);
 
@@ -41,7 +50,33 @@ router.get('/', async (req, res) => {
   res.send(filteredGroups);
 });
 
-/* Create a group */
+/**
+ *  Get list of servers able to request to join
+ */
+router.get('/discover', (req, res) => {
+  const userId = parseInt(req.query.userId);
+  /* Validate User ID */
+  if (!userId) return res.status(400).send({ error: 'User ID Required' });
+
+  /* Get list of groups user is not a member of */
+  try {
+    const availGroups = groups.filter((g) => !g.members.includes(userId));
+    res.send(availGroups);
+  } catch (error) {
+    console.error('Error loading discoverable groups: ', error);
+    return res.status(500).send({ error: 'Failed to load discoverable groups' });
+  }
+});
+
+/**
+ *
+ *        POST
+ *
+ */
+
+/**
+ * Create a group
+ */
 router.post('/', (req, res) => {
   try {
     const { name, id, image } = req.body;
@@ -84,7 +119,76 @@ router.post('/', (req, res) => {
   }
 });
 
-// Delete a user from a group
+/**
+ *  Add user to groups join requests
+ */
+router.post('/:groupId/requests', (req, res) => {
+  const groupId = parseInt(req.params.groupId);
+  const { userId } = req.body;
+  const uid = Number(userId);
+
+  /* Validate User ID and Group ID */
+  if (!Number.isInteger(uid) || !Number.isInteger(groupId)) {
+    return res.status(400).json({ error: 'Invalid group or user ID' });
+  }
+
+  /* Get the group being requested */
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found' });
+  }
+
+  /* Add user to group join requests list */
+  group.requests = Array.isArray(group.requests) ? group.requests : [];
+  if (!group.requests.includes(uid)) {
+    group.requests.push(uid);
+  }
+
+  try {
+    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    return res.status(201).json({ ok: true });
+  } catch (error) {
+    console.error('Error saving join request: ', e);
+    return res.status(500).json({ error: 'Failed to save join request' });
+  }
+});
+
+/**
+ *  Approve a users group join request
+ */
+router.post('/:groupId/requests/:userId/approve', (req, res) => {
+  const groupId = parseInt(req.params.groupId);
+  const userId = parseInt(req.params.userId);
+  if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
+    return res.status(400).json({ error: 'Invalid group or user ID' });
+  }
+
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return res.status(404).json({ error: 'Group not found' });
+
+  group.requests = Array.isArray(group.requests) ? group.requests : [];
+  group.members = Array.isArray(group.members) ? group.members : [];
+  group.requests = group.requests.filter((id) => id !== userId);
+  if (!group.members.includes(userId)) group.members.push(userId);
+
+  try {
+    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error('Error approving join request: ', error);
+    return res.status(500).json({ error: 'Failed to approve join request' });
+  }
+});
+
+/**
+ *
+ *        DELETE
+ *
+ */
+
+/**
+ *  Remove a user from a single group
+ */
 router.delete('/:groupId/users/:userId', (req, res) => {
   const groupId = parseInt(req.params.groupId);
   const userId = parseInt(req.params.userId);
@@ -100,7 +204,9 @@ router.delete('/:groupId/users/:userId', (req, res) => {
   res.status(200).json({ message: 'User removed from group' });
 });
 
-// Delete a user from all groups
+/**
+ *  Remove a user from all groups (User Deleted)
+ */
 router.delete('/:userId', (req, res) => {
   const userId = parseInt(req.params.userId);
   groups.forEach((group) => {
@@ -110,7 +216,9 @@ router.delete('/:userId', (req, res) => {
   res.status(200).json({ message: 'User removed from all groups' });
 });
 
-// Delete a group
+/**
+ * Delete a group
+ */
 router.delete('/delete/:groupId', (req, res) => {
   const groupId = parseInt(req.params.groupId);
   groups = groups.filter((g) => g.id !== groupId);
@@ -118,6 +226,28 @@ router.delete('/delete/:groupId', (req, res) => {
   res.status(200).json({ message: 'Group deleted' });
 });
 
-// get group by id
+/**
+ *  Reject a group join request
+ */
+router.delete('/:groupId/requests/:userId', (req, res) => {
+  const groupId = parseInt(req.params.groupId);
+  const userId = parseInt(req.params.userId);
+  if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
+    return res.status(400).json({ error: 'Invalid group or user ID' });
+  }
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return res.status(404).json({ error: 'Group not found' });
+
+  group.requests = Array.isArray(group.requests) ? group.requests : [];
+  group.requests = group.requests.filter((id) => id !== userId);
+
+  try {
+    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error('Error rejecting join request: ', error);
+    return res.status(500).json({ error: 'Failed to reject join request' });
+  }
+});
 
 module.exports = router;

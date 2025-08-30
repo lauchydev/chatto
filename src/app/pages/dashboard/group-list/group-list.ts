@@ -3,20 +3,22 @@ import { CommonModule } from '@angular/common';
 import { Groups } from '../../../services/groups.service';
 import { Group, GroupApi } from '../../../model/group.interface';
 import { Router } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import { Compass, LucideAngularModule } from 'lucide-angular';
 import { LogOut, Plus, Settings, Shield, User } from 'lucide-angular/src/icons';
 import { Auth } from '../../../services/auth.service';
 import { CreateGroupModal } from '../../../components/create-group-modal/create-group-modal';
 import { ChannelsService } from '../../../services/channels.service';
+import { DiscoverGroupsModal } from '../../../components/discover-groups-modal/discover-groups-modal';
 
 @Component({
   selector: 'app-group-list',
-  imports: [CommonModule, LucideAngularModule, CreateGroupModal],
+  imports: [CommonModule, LucideAngularModule, CreateGroupModal, DiscoverGroupsModal],
   templateUrl: './group-list.html',
   styleUrl: './group-list.css',
 })
 export class GroupList implements OnInit {
   @ViewChild(CreateGroupModal) createGroupModal!: CreateGroupModal;
+  @ViewChild(DiscoverGroupsModal) discoverGroupsModal!: DiscoverGroupsModal;
 
   protected groupService = inject(Groups);
   protected authService = inject(Auth);
@@ -29,6 +31,7 @@ export class GroupList implements OnInit {
   readonly LogOutIcon = LogOut;
   readonly UserIcon = User;
   readonly PlusIcon = Plus;
+  readonly ServerBrowser = Compass;
 
   isProfileDropdown = false;
 
@@ -68,6 +71,10 @@ export class GroupList implements OnInit {
 
   openCreateGroupModal(): void {
     this.createGroupModal.openModal();
+  }
+
+  openDiscoverGroupsModal(): void {
+    this.discoverGroupsModal.openModal();
   }
 
   goToAdmin(): void {

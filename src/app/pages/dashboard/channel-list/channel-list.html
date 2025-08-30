@@ -16,12 +16,12 @@
         </span>
       </a>
 
-      @if (isGroupMenuOpen) {
+      @if (isGroupMenuOpen && groupsService.getSelectedGroup()?.name) {
       <div
         class="absolute left-0 right-0 mt-2 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--dropdown)] shadow-lg z-50 divide-y divide-[var(--border)]"
         (click)="$event.stopPropagation()"
       >
-        @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
+        @if (authService.isSuperAdmin() || groupsService.isGroupAdmin()) {
         <a
           class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
           (click)="openAddChannel()"
@@ -29,7 +29,7 @@
           <lucide-icon [img]="AddChannelIcon" class="w-4 h-4 mr-2" />
           Add Channel
         </a>
-        } @if (!groupsService.isGroupAdmin) {
+        } @if (!groupsService.isGroupAdmin()) {
         <a
           class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
           (click)="confirmLeaveGroup()"
@@ -37,7 +37,7 @@
           <lucide-icon [img]="LeaveServerIcon" class="w-4 h-4 mr-2" />
           Leave Group
         </a>
-        } @if (authService.isSuperAdmin() || groupsService.isGroupAdmin()) {
+        }@if (authService.isSuperAdmin() || groupsService.isGroupAdmin()) {
         <a
           class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
           (click)="confirmDeleteGroup()"
@@ -48,7 +48,7 @@
         }
       </div>
       <div class="fixed inset-0 z-40" (click)="closeGroupMenu()"></div>
-      }
+      } @else { }
     </div>
 
     <!-- Add channel popover -->
@@ -95,6 +95,7 @@
         Channels
       </div>
       <!-- Channel list -->
+      @if (groupsService.getSelectedGroup()?.name) {
       <div class="space-y-1 relative">
         @for (channel of channelsService.channels(); track channel.id) {
         <div class="flex items-center justify-between group">
@@ -140,6 +141,7 @@
         <div class="fixed inset-0 z-0" (click)="closeDropdown()"></div>
         }
       </div>
+      } @else { }
     </div>
   </div>
 

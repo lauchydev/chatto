@@ -1,259 +1,308 @@
 <div class="min-h-screen p-8 bg-[var(--background)] flex justify-center items-start">
-    <div class="w-full max-w-6xl bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 shadow-lg">
-      <!-- Header -->
-      <div class="flex justify-between items-center mb-8 pb-6 border-b border-[var(--border)]">
-        <div class="flex items-center gap-4">
-          <a
-            class="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors duration-200 cursor-pointer"
-            title="Back to Dashboard"
-            (click)="goToDashboard()"
-          >
-            <svg class="w-5 h-5 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <h1 class="text-3xl font-bold text-[var(--foreground)]">Admin Panel</h1>
-        </div>
-        @if (authService.isSuperAdmin()) {
+  <div
+    class="w-full max-w-6xl bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 shadow-lg"
+  >
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8 pb-6 border-b border-[var(--border)]">
+      <div class="flex items-center gap-4">
         <a
-          class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-[var(--primary)] text-white hover:opacity-90 transition cursor-pointer"
-          title="Create User"
-          (click)="openCreateUserModal()"
+          class="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors duration-200 cursor-pointer"
+          title="Back to Dashboard"
+          (click)="goToDashboard()"
         >
-          <lucide-icon [img]="PlusIcon" name="Plus" class="w-4 h-4"></lucide-icon>
-          Create User
+          <svg
+            class="w-5 h-5 text-[var(--foreground)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
         </a>
-        }
+        <h1 class="text-3xl font-bold text-[var(--foreground)]">Admin Panel</h1>
       </div>
-  
-
       @if (authService.isSuperAdmin()) {
-      <div class="space-y-10">
-        <!-- All Users -->
-        <section>
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-[var(--foreground)]">All Users</h2>
-            <span class="text-sm text-[var(--muted-foreground)]">{{ users.length || 0 }} users</span>
-          </div>
-  
-          <div class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden">
-            @if (users && users.length > 0) {
-            @for (user of users; track user.id) {
-            <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
-              <!-- Left: Avatar + Identity -->
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
-                  @if (!!user.image && user.image !== '') {
-                  <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
-                  } @else {
-                  <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
-                  }
-                </div>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">{{ user.username }}</p>
-                    <!-- Role badges -->
-                    @if (user.roles.includes('superadmin')) {
-                    <span class="px-2 py-0.5 rounded text-xs bg-[var(--destructive)]/10 text-[var(--destructive)]">Super Admin</span>
-                    } @else if (user.roles.includes('groupadmin')) {
-                    <span class="px-2 py-0.5 rounded text-xs bg-[var(--primary)]/10 text-[var(--primary)]">Group Admin</span>
-                    } @else {
-                    <span class="px-2 py-0.5 rounded text-xs bg-[var(--muted)] text-[var(--muted-foreground)]">User</span>
-                    }
-                  </div>
-                  <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">{{ user.email }}</p>
-                </div>
-              </div>
-  
-              <!-- Right: Actions -->
-              <div class="flex items-center gap-1">
-                <!-- Role transitions -->
-                @if (!user.roles.includes('groupadmin') && !user.roles.includes('superadmin')) {
-                <!-- Default user: can promote to Group Admin -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
-                  title="Promote to Group Admin"
-                  (click)="promoteToGroupAdmin(user.id)"
-                >
-                  <lucide-icon [img]="ShieldIcon" name="Shield" class="w-4 h-4"></lucide-icon>
-                </a>
-                } @else if (user.roles.includes('groupadmin') && !user.roles.includes('superadmin')) {
-                <!-- Group admin: can demote to User OR promote to Super Admin -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
-                  title="Demote to User"
-                  (click)="demoteToUser(user.id)"
-                >
-                  <lucide-icon [img]="ShieldOffIcon" name="ShieldOff" class="w-4 h-4"></lucide-icon>
-                </a>
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
-                  title="Promote to Super Admin"
-                  (click)="promoteToSuperAdmin(user.id)"
-                >
-                  <lucide-icon [img]="CrownIcon" name="Crown" class="w-4 h-4"></lucide-icon>
-                </a>
-                } @else if (user.roles.includes('superadmin')) {
-                <!-- Super admin: optionally allow demote to Group Admin -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
-                  title="Demote to Group Admin"
-                  (click)="demoteToGroupAdmin(user.id)"
-                >
-                  <lucide-icon [img]="ShieldMinusIcon" name="ShieldMinus" class="w-4 h-4"></lucide-icon>
-                </a>
-                }
-  
-                <!-- Ban -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--destructive)] transition-colors cursor-pointer"
-                  title="Ban User"
-                  (click)="banUser(user.id)"
-                >
-                  <lucide-icon [img]="BanIcon" name="Ban" class="w-4 h-4"></lucide-icon>
-                </a>
-  
-                <!-- Delete -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
-                  title="Delete User"
-                  (click)="confirmDeleteUser(user.id, user.username)"
-                >
-                  <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
-                </a>
-              </div>
-            </div>
-            } } @else {
-            <div class="p-6 text-center text-[var(--muted-foreground)]">No users found.</div>
-            }
-          </div>
-        </section>
-  
-        <!-- Reported Users -->
-        <section>
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-[var(--foreground)]">Reported Users</h2>
-            <span class="text-sm text-[var(--muted-foreground)]">{{ reportedUsers.length || 0 }} reported</span>
-          </div>
-  
-          <div class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden">
-            @if (reportedUsers && reportedUsers.length > 0) {
-            @for (user of reportedUsers; track user.id) {
-            <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
-                  @if (!!user.image && user.image !== '') {
-                  <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
-                  } @else {
-                  <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
-                  }
-                </div>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">{{ user.username }}</p>
-                    <span class="px-2 py-0.5 rounded text-xs bg-amber-500/10 text-amber-500">Reported</span>
-                  </div>
-                  <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">{{ user.email }}</p>
-                </div>
-              </div>
-  
-              <div class="flex items-center gap-1">
-                <!-- Remove report -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-amber-600 transition-colors cursor-pointer"
-                  title="Remove Report"
-                  (click)="removeReport(user.id)"
-                >
-                  <lucide-icon [img]="XCircleIcon" name="XCircle" class="w-4 h-4"></lucide-icon>
-                </a>
-  
-                <!-- Ban -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--destructive)] transition-colors cursor-pointer"
-                  title="Ban User"
-                  (click)="banUser(user.id)"
-                >
-                  <lucide-icon [img]="BanIcon" name="Ban" class="w-4 h-4"></lucide-icon>
-                </a>
-  
-                <!-- Delete -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
-                  title="Delete User"
-                  (click)="confirmDeleteUser(user.id, user.username)"
-                >
-                  <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
-                </a>
-              </div>
-            </div>
-            } } @else {
-            <div class="p-6 text-center text-[var(--muted-foreground)]">No reported users.</div>
-            }
-          </div>
-        </section>
-  
-        <!-- Banned Users -->
-        <section>
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-[var(--foreground)]">Banned Users</h2>
-            <span class="text-sm text-[var(--muted-foreground)]">{{ bannedUsers.length || 0 }} banned</span>
-          </div>
-  
-          <div class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden">
-            @if (bannedUsers && bannedUsers.length > 0) {
-            @for (user of bannedUsers; track user.id) {
-            <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
-                  @if (!!user.image && user.image !== '') {
-                  <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
-                  } @else {
-                  <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
-                  }
-                </div>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">{{ user.username }}</p>
-                    <span class="px-2 py-0.5 rounded text-xs bg-[var(--destructive)]/10 text-[var(--destructive)]">Banned</span>
-                  </div>
-                  <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">{{ user.email }}</p>
-                </div>
-              </div>
-  
-              <div class="flex items-center gap-1">
-                <!-- Unban -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--success)] transition-colors cursor-pointer"
-                  title="Unban User"
-                  (click)="unbanUser(user.id)"
-                >
-                  <lucide-icon [img]="Undo2Icon" name="Undo2" class="w-4 h-4"></lucide-icon>
-                </a>
-  
-                <!-- Delete -->
-                <a
-                  class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
-                  title="Delete User"
-                  (click)="confirmDeleteUser(user.id, user.username)"
-                >
-                  <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
-                </a>
-              </div>
-            </div>
-            } } @else {
-            <div class="p-6 text-center text-[var(--muted-foreground)]">No banned users.</div>
-            }
-          </div>
-        </section>
-      </div>
-      } @else {
-        <!-- Fallback incase guard doesnt work? -->
-      <div class="text-center text-[var(--muted-foreground)]">You do not have access to this page.</div>
+      <a
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-[var(--primary)] text-white hover:opacity-90 transition cursor-pointer"
+        title="Create User"
+        (click)="openCreateUserModal()"
+      >
+        <lucide-icon [img]="PlusIcon" name="Plus" class="w-4 h-4"></lucide-icon>
+        Create User
+      </a>
       }
     </div>
-  <app-create-user-modal />
-  <app-confirm-modal
-    #deleteConfirm
-    (confirmed)="onConfirmDeleteUser()"
-  ></app-confirm-modal>
+
+    @if (authService.isSuperAdmin()) {
+    <div class="space-y-10">
+      <!-- All Users -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-[var(--foreground)]">All Users</h2>
+          <span class="text-sm text-[var(--muted-foreground)]">{{ users.length || 0 }} users</span>
+        </div>
+
+        <div
+          class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden"
+        >
+          @if (users && users.length > 0) { @for (user of users; track user.id) {
+          <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
+            <!-- Left: Avatar + Identity -->
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
+                @if (!!user.image && user.image !== '') {
+                <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
+                } @else {
+                <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
+                }
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
+                    {{ user.username }}
+                  </p>
+                  <!-- Role badges -->
+                  @if (user.roles.includes('superadmin')) {
+                  <span
+                    class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-0.5 text-xs font-medium text-red-400 inset-ring inset-ring-red-400/20"
+                    >Super Admin</span
+                  >
+                  } @else if (user.roles.includes('groupadmin')) {
+                  <span
+                    class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-0.5 text-xs font-medium text-blue-400 inset-ring inset-ring-blue-400/30"
+                    >Group Admin</span
+                  >
+                  } @else {
+
+                  <span
+                    class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-0.5 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20"
+                    >User</span
+                  >
+                  }
+                </div>
+                <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">
+                  {{ user.email }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-1">
+              <!-- Role transitions -->
+              @if (!user.roles.includes('groupadmin') && !user.roles.includes('superadmin')) {
+              <!-- Default user: can promote to Group Admin -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
+                title="Promote to Group Admin"
+                (click)="promoteToGroupAdmin(user.id)"
+              >
+                <lucide-icon [img]="ShieldIcon" name="Shield" class="w-4 h-4"></lucide-icon>
+              </a>
+              } @else if (user.roles.includes('groupadmin') && !user.roles.includes('superadmin')) {
+              <!-- Group admin: can demote to User OR promote to Super Admin -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
+                title="Demote to User"
+                (click)="demoteToUser(user.id)"
+              >
+                <lucide-icon [img]="ShieldOffIcon" name="ShieldOff" class="w-4 h-4"></lucide-icon>
+              </a>
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
+                title="Promote to Super Admin"
+                (click)="promoteToSuperAdmin(user.id)"
+              >
+                <lucide-icon [img]="CrownIcon" name="Crown" class="w-4 h-4"></lucide-icon>
+              </a>
+              } @else if (user.roles.includes('superadmin')) {
+              <!-- Super admin: optionally allow demote to Group Admin -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--foreground)] transition-colors cursor-pointer"
+                title="Demote to Group Admin"
+                (click)="demoteToGroupAdmin(user.id)"
+              >
+                <lucide-icon
+                  [img]="ShieldMinusIcon"
+                  name="ShieldMinus"
+                  class="w-4 h-4"
+                ></lucide-icon>
+              </a>
+              }
+
+              <!-- Ban -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--destructive)] transition-colors cursor-pointer"
+                title="Ban User"
+                (click)="banUser(user.id)"
+              >
+                <lucide-icon [img]="BanIcon" name="Ban" class="w-4 h-4"></lucide-icon>
+              </a>
+
+              <!-- Delete -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
+                title="Delete User"
+                (click)="confirmDeleteUser(user.id, user.username)"
+              >
+                <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
+              </a>
+            </div>
+          </div>
+          } } @else {
+          <div class="p-6 text-center text-[var(--muted-foreground)]">No users found.</div>
+          }
+        </div>
+      </section>
+
+      <!-- Reported Users -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-[var(--foreground)]">Reported Users</h2>
+          <span class="text-sm text-[var(--muted-foreground)]"
+            >{{ reportedUsers.length || 0 }} reported</span
+          >
+        </div>
+
+        <div
+          class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden"
+        >
+          @if (reportedUsers && reportedUsers.length > 0) { @for (user of reportedUsers; track
+          user.id) {
+          <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
+                @if (!!user.image && user.image !== '') {
+                <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
+                } @else {
+                <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
+                }
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
+                    {{ user.username }}
+                  </p>
+                  <span class="px-2 py-0.5 rounded text-xs bg-amber-500/10 text-amber-500"
+                    >Reported</span
+                  >
+                </div>
+                <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">
+                  {{ user.email }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <!-- Remove report -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-amber-600 transition-colors cursor-pointer"
+                title="Remove Report"
+                (click)="removeReport(user.id)"
+              >
+                <lucide-icon [img]="XCircleIcon" name="XCircle" class="w-4 h-4"></lucide-icon>
+              </a>
+
+              <!-- Ban -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--destructive)] transition-colors cursor-pointer"
+                title="Ban User"
+                (click)="banUser(user.id)"
+              >
+                <lucide-icon [img]="BanIcon" name="Ban" class="w-4 h-4"></lucide-icon>
+              </a>
+
+              <!-- Delete -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
+                title="Delete User"
+                (click)="confirmDeleteUser(user.id, user.username)"
+              >
+                <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
+              </a>
+            </div>
+          </div>
+          } } @else {
+          <div class="p-6 text-center text-[var(--muted-foreground)]">No reported users.</div>
+          }
+        </div>
+      </section>
+
+      <!-- Banned Users -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-[var(--foreground)]">Banned Users</h2>
+          <span class="text-sm text-[var(--muted-foreground)]"
+            >{{ bannedUsers.length || 0 }} banned</span
+          >
+        </div>
+
+        <div
+          class="divide-y divide-[var(--border)] border border-[var(--border)] rounded-lg overflow-hidden"
+        >
+          @if (bannedUsers && bannedUsers.length > 0) { @for (user of bannedUsers; track user.id) {
+          <div class="flex items-center justify-between gap-4 p-4 bg-[var(--card)]">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-lg overflow-hidden bg-[var(--muted)] shrink-0">
+                @if (!!user.image && user.image !== '') {
+                <img [src]="user.image" [alt]="user.username" class="w-full h-full object-cover" />
+                } @else {
+                <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
+                }
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
+                    {{ user.username }}
+                  </p>
+                  <span
+                    class="inline-flex items-center rounded-md bg-[var(--destructive)]/10 px-2 py-1 text-xs font-medium text-[var(--destructive)] inset-ring inset-ring-[var(--destructive)]/50"
+                    >Banned</span
+                  >
+                </div>
+                <p class="text-sm text-[var(--muted-foreground)] truncate max-w-[280px]">
+                  {{ user.email }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <!-- Unban -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--accent)] text-[var(--success)] transition-colors cursor-pointer"
+                title="Unban User"
+                (click)="unbanUser(user.id)"
+              >
+                <lucide-icon [img]="Undo2Icon" name="Undo2" class="w-4 h-4"></lucide-icon>
+              </a>
+
+              <!-- Delete -->
+              <a
+                class="p-2 rounded-md hover:bg-[var(--destructive)]/10 text-[var(--destructive)] transition-colors cursor-pointer"
+                title="Delete User"
+                (click)="confirmDeleteUser(user.id, user.username)"
+              >
+                <lucide-icon [img]="TrashIcon" name="Trash2" class="w-4 h-4"></lucide-icon>
+              </a>
+            </div>
+          </div>
+          } } @else {
+          <div class="p-6 text-center text-[var(--muted-foreground)]">No banned users.</div>
+          }
+        </div>
+      </section>
+    </div>
+    } @else {
+    <!-- Fallback incase guard doesnt work? -->
+    <div class="text-center text-[var(--muted-foreground)]">
+      You do not have access to this page.
+    </div>
+    }
   </div>
+  <app-create-user-modal />
+  <app-confirm-modal #deleteConfirm (confirmed)="onConfirmDeleteUser()"></app-confirm-modal>
+</div>

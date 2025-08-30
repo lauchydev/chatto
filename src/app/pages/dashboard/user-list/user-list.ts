@@ -5,10 +5,11 @@ import { User } from '../../../model/user.interface';
 import { Groups } from '../../../services/groups.service';
 import { effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Check, LucideAngularModule, X } from 'lucide-angular';
 
 @Component({
   selector: 'app-user-list',
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })
@@ -17,6 +18,10 @@ export class UserList {
   protected usersService = inject(UsersService);
   protected authService = inject(Auth);
   protected groupsService = inject(Groups);
+
+  /* Icons */
+  readonly AllowIcon = Check;
+  readonly RejectIcon = X;
 
   /* Data Variables */
   superAdminUsers: User[] = [];
@@ -40,6 +45,7 @@ export class UserList {
     if (id === this.lastGroupId) return;
     this.lastGroupId = id;
     this.loadGroupUsers(id);
+    this.loadGroupRequests();
   });
 
   /* Actual user loading logic */
@@ -74,15 +80,83 @@ export class UserList {
     });
   }
 
-  /* Functions for User group requests */
-  approveRequest(id: number): void {
-    const u = this.joinRequests.find((r) => r.id === id);
-    if (!u) return;
-    this.joinRequests = this.joinRequests.filter((r) => r.id !== id);
-    this.memberUsers = [...this.memberUsers, u];
+  private loadGroupRequests(): void {
+    this.loading = true;
+    this.error = '';
+
+    const group = this.groupsService.getSelectedGroup();
+    if (!group) {
+      this.joinRequests = [];
+      this.loading = false;
+      return;
+    }
+
+    const requestIds: number[] = Array.isArray((group as any).requests)
+      ? ((group as any).requests as number[])
+      : [];
+
+    if (requestIds.length === 0) {
+      this.joinRequests = [];
+      this.loading = false;
+      return;
+    }
+
+    this.usersService.getUsers(requestIds).subscribe({
+      next: (users) => {
+        this.joinRequests = users;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load join requests: ', error);
+        this.error = 'Failed to load join requests';
+        this.loading = false;
+      },
+    });
   }
 
-  rejectRequest(id: number): void {
-    this.joinRequests = this.joinRequests.filter((r) => r.id !== id);
+  /* Functions for User group requests */
+  approveRequest(userId: number): void {
+    const groupId = this.groupsService.getSelectedGroup()?.id;
+    if (!groupId) {
+      console.error('Invalid group ID: ', groupId);
+      return;
+    }
+    const u = this.joinRequests.find((r) => r.id === userId);
+    if (!u) return;
+    this.joinRequests = this.joinRequests.filter((r) => r.id !== userId);
+    this.memberUsers = [...this.memberUsers, u];
+
+    this.groupsService.approveRequest(groupId, userId).subscribe({
+      next: () => {
+        this.groupsService.refreshGroups();
+      },
+      error: (err) => {
+        console.error('Approve failed: ', err);
+        this.memberUsers = this.memberUsers.filter((m) => m.id !== userId);
+        this.joinRequests = [...this.joinRequests, u];
+        this.error = 'Failed to approve request';
+      },
+    });
+  }
+
+  rejectRequest(userId: number): void {
+    const groupId = this.groupsService.getSelectedGroup()?.id;
+    if (!groupId) {
+      console.error('Invalid group ID: ', groupId);
+      return;
+    }
+    const prev = this.joinRequests;
+    this.joinRequests = this.joinRequests.filter((r) => r.id !== userId);
+
+    this.groupsService.rejectRequest(groupId, userId).subscribe({
+      next: () => {
+        this.groupsService.refreshGroups();
+      },
+      error: (err) => {
+        console.error('Reject failed: ', err);
+        this.joinRequests = prev;
+        this.error = 'Failed to reject request';
+      },
+    });
   }
 }

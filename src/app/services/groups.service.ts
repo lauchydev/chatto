@@ -65,6 +65,28 @@ export class Groups {
     return this._groups().find((group) => group.id === selectedId) || null;
   }
 
+  getDiscoverGroups(): Observable<GroupApi[]> {
+    const userId = this.authService.getUserId();
+    if (!userId) throw new Error('No user is logged in');
+    return this.http.get<GroupApi[]>(`${this.localurl}/api/groups/discover?userId=${userId}`);
+  }
+
+  requestToJoin(groupId: number): Observable<void> {
+    const userId = this.authService.getUserId();
+    if (!userId) throw new Error('No user is logged in');
+    return this.http.post<void>(`${this.localurl}/api/groups/${groupId}/requests`, { userId });
+  }
+
+  rejectRequest(groupId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/requests/${userId}`);
+  }
+  approveRequest(groupId: number, userId: number): Observable<void> {
+    return this.http.post<void>(
+      `${this.localurl}/api/groups/${groupId}/requests/${userId}/approve`,
+      {}
+    );
+  }
+
   getGroup(groupId: number): GroupApi | null {
     return this._groups().find((group) => group.id === groupId) || null;
   }

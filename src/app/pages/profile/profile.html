@@ -188,13 +188,23 @@
               Roles
             </label>
             <div class="flex flex-wrap gap-2">
-              @for (role of user.roles; track role) {
+              @for (role of user.roles; track role) { @if (role === 'superadmin') {
               <span
-                class="inline-block px-3 py-1 bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-full text-sm font-medium"
+                class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-red-400/20"
               >
-                {{ role }}
+                Super Admin
               </span>
-              }
+              } @else if (role === 'groupadmin') {
+              <span
+                class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-0.5 text-xs font-medium text-blue-400 inset-ring inset-ring-blue-400/30"
+                >Group Admin</span
+              >
+              } @else {
+              <span
+                class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-0.5 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20"
+                >User</span
+              >
+              } }
             </div>
           </div>
         </div>
@@ -253,7 +263,4 @@
   </div>
 </div>
 
-<app-confirm-modal
-  #deleteProfileConfirm
-  (confirmed)="confirmDeleteProfile()"
-></app-confirm-modal>
+<app-confirm-modal #deleteProfileConfirm (confirmed)="confirmDeleteProfile()"></app-confirm-modal>

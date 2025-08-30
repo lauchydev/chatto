@@ -27,16 +27,6 @@
                 (click)="$event.stopPropagation()"
               >
                 <div>
-                  <!--                   <a
-                    type="button"
-                    (click)="goToSettings()"
-                    class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
-                    role="menuitem"
-                  >
-                    <lucide-icon [img]="SettingsIcon" name="Settings" class="w-4 h-4 mr-2" />
-                    Settings
-                  </a> -->
-
                   <a
                     type="button"
                     (click)="goToProfile()"
@@ -71,6 +61,19 @@
               }
             </a>
           </div>
+
+          <!-- Group Browser -->
+          @if (!authService.isSuperAdmin()) {
+          <div class="relative group">
+            <a
+              type="button"
+              class="flex justify-center items-center w-12 h-12 bg-[var(--card)] text-white rounded-xl hover:bg-[var(--primary)] cursor-pointer group"
+              (click)="openDiscoverGroupsModal()"
+            >
+              <lucide-icon [img]="ServerBrowser" class="object-cover rounded-xl" [size]="25" />
+            </a>
+          </div>
+          }
 
           <!-- Separator line (Discord style) -->
           <div class="w-8 h-0.5 bg-[var(--border)] mx-auto my-2 rounded-full"></div>
@@ -173,3 +176,4 @@
 }
 
 <app-create-group-modal />
+<app-discover-groups-modal />

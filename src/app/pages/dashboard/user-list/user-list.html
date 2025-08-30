@@ -86,7 +86,7 @@
             }
             <div class="min-w-0">
               <div class="text-sm font-semibold truncate">
-                {{ user.username }}    
+                {{ user.username }}
               </div>
               <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
@@ -123,8 +123,7 @@
           }
         </div>
       </div>
-      }
-
+      } @if (groupsService.isGroupAdmin()) {
       <div>
         <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2 pt-4">Requests</div>
         @if (!joinRequests || joinRequests.length === 0) {
@@ -160,18 +159,20 @@
                 (click)="approveRequest(request.id)"
                 (keydown.enter)="approveRequest(request.id)"
                 (keydown.space)="approveRequest(request.id)"
-                class="px-2 py-1 rounded text-xs bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[#4752c4] cursor-pointer"
-                >Approve</a
+                class="px-2 py-1 rounded text-xs text-[var(--success)] hover:bg-[var(--success)]/10 cursor-pointer border border-[var(--success)]/50"
               >
+                <lucide-icon [img]="AllowIcon" [size]="16" />
+              </a>
               <a
                 role="button"
                 tabindex="0"
                 (click)="rejectRequest(request.id)"
                 (keydown.enter)="rejectRequest(request.id)"
                 (keydown.space)="rejectRequest(request.id)"
-                class="px-2 py-1 rounded text-xs text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
-                >Reject</a
+                class="px-2 py-1 rounded text-xs text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer border border-[var(--destructive)]/50"
               >
+                <lucide-icon [img]="RejectIcon" [size]="16" />
+              </a>
             </div>
             }
           </div>
@@ -179,7 +180,9 @@
         </div>
         }
       </div>
+      }
     </div>
+
     }
   </div>
 

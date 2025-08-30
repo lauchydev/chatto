@@ -8,7 +8,8 @@ export interface GroupApi {
   owner: number;
   members: number[];
   admins: number[];
-  channels: number[];
+  channels?: number[];
+  requests?: number[];
 }
 export interface Group {
   id: number;
