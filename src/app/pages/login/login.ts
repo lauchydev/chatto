@@ -34,6 +34,10 @@ export class Login implements OnInit {
     });
   }
 
+  goToSignup(): void {
+    this.router.navigate(['register']);
+  }
+
   validateUser(form: NgForm) {
     this.errorMessage = '';
     this.successMessage = '';

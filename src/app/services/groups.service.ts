@@ -83,11 +83,15 @@ export class Groups {
   }
 
   deleteGroup(groupId: number): Observable<void> {
-    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}`);
+    return this.http.delete<void>(`${this.localurl}/api/groups/delete/${groupId}`);
   }
 
   leaveGroup(groupId: number): Observable<void> {
-    return this.http.post<void>(`${this.localurl}/api/groups/${groupId}/leave`, {});
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      throw new Error('No user is logged in');
+    }
+    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/users/${userId}`);
   }
 
   // Utility methods
@@ -99,14 +103,14 @@ export class Groups {
     this._selectedGroupId.set(null);
   }
 
-  isGroupOwner(): boolean {
+  isGroupAdmin(): boolean {
     const group = this.getSelectedGroup();
     const userId = this.authService.getUserId();
+    if (!group) return false;
 
     if (userId) {
-      return this.authService.isSuperAdmin() || group?.owner === userId;
+      return this.authService.isSuperAdmin() || group.admins.includes(userId);
     }
-
     return false;
   }
 }

@@ -5,11 +5,10 @@ import { User } from '../../../model/user.interface';
 import { Groups } from '../../../services/groups.service';
 import { effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Crown, LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-user-list',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })
@@ -18,8 +17,6 @@ export class UserList {
   protected usersService = inject(UsersService);
   protected authService = inject(Auth);
   protected groupsService = inject(Groups);
-
-  readonly CrownIcon = Crown;
 
   /* Data Variables */
   superAdminUsers: User[] = [];

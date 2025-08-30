@@ -1,76 +1,145 @@
 <div
   class="flex h-screen w-64 flex-col justify-between border-e border-[var(--border)] bg-[var(--sidebar-bg)] text-white"
 >
-  <div class="p-3">
-    <div class="text-xs uppercase tracking-wide text-[var(--muted-foreground)] mb-2">Channels</div>
-
-    <!-- Create channel (admins only) -->
-    @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
-    <form (ngSubmit)="createChannel()" class="mb-3 flex gap-2">
-      <input
-        type="text"
-        [(ngModel)]="channelName"
-        name="channelName"
-        placeholder="Create channel"
-        class="flex-1 px-2 py-1 rounded bg-[var(--input)] border border-[var(--border)] text-sm"
-      />
-      <button
-        type="submit"
-        class="px-2 py-1 rounded bg-[var(--primary)] text-white text-sm disabled:opacity-50"
-        [disabled]="!channelName.trim()"
+  <div class="">
+    <!-- Group header dropdown -->
+    <div class="relative">
+      <a
+        class="flex items-center justify-between w-full p-3 border-b border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--accent)] cursor-pointer"
+        (click)="toggleGroupMenu()"
       >
-        Add
-      </button>
-    </form>
+        <span class="font-medium truncate">{{
+          groupsService.getSelectedGroup()?.name || 'No group selected'
+        }}</span>
+        <span class="text-[var(--muted-foreground)]">
+          <lucide-icon [img]="DownIcon" name="DownIcon" [size]="20" />
+        </span>
+      </a>
+
+      @if (isGroupMenuOpen) {
+      <div
+        class="absolute left-0 right-0 mt-2 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--dropdown)] shadow-lg z-50 divide-y divide-[var(--border)]"
+        (click)="$event.stopPropagation()"
+      >
+        @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
+        <a
+          class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] transition-colors hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] cursor-pointer"
+          (click)="openAddChannel()"
+        >
+          <lucide-icon [img]="AddChannelIcon" class="w-4 h-4 mr-2" />
+          Add Channel
+        </a>
+        } @if (!groupsService.isGroupAdmin) {
+        <a
+          class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
+          (click)="confirmLeaveGroup()"
+        >
+          <lucide-icon [img]="LeaveServerIcon" class="w-4 h-4 mr-2" />
+          Leave Group
+        </a>
+        } @if (authService.isSuperAdmin() || groupsService.isGroupAdmin()) {
+        <a
+          class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10 cursor-pointer"
+          (click)="confirmDeleteGroup()"
+        >
+          <lucide-icon [img]="DeleteServerIcon" class="w-4 h-4 mr-2" />
+          Delete Group
+        </a>
+        }
+      </div>
+      <div class="fixed inset-0 z-40" (click)="closeGroupMenu()"></div>
+      }
+    </div>
+
+    <!-- Add channel popover -->
+    @if (isAddChannelOpen) {
+    <div class="relative">
+      <form (submit)="submitAddChannel()">
+        <div
+          class="absolute left-0 right-0 rounded-md border border-[var(--border)] bg-[var(--popover)] shadow-lg z-50"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="p-3">
+            <label class="block text-sm text-[var(--muted-foreground)] mb-1">Channel name</label>
+            <input
+              type="text"
+              [(ngModel)]="newChannelName"
+              name="newChannelName"
+              placeholder="e.g. general"
+              class="w-full px-2 py-1 rounded bg-[var(--input)] border border-[var(--border)] text-sm"
+            />
+            <div class="mt-3 flex items-center justify-end gap-2">
+              <a
+                class="px-3 py-1.5 rounded-md border border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--accent)] cursor-pointer"
+                (click)="cancelAddChannel()"
+              >
+                Cancel
+              </a>
+              <a
+                class="px-3 py-1.5 rounded-md bg-[var(--primary)] text-white hover:opacity-90 cursor-pointer"
+                [class.opacity-50]="!newChannelName.trim()"
+                type="submit"
+              >
+                Create
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div class="fixed inset-0 z-40" (click)="cancelAddChannel()"></div>
+    </div>
     }
 
-    <!-- Channel list -->
-    <div class="space-y-1 relative">
-      @for (channel of channelsService.channels(); track channel.id) {
-      <div class="flex items-center justify-between group">
-        <button
-          class="flex-1 text-left px-2 py-1 rounded text-sm hover:bg-[var(--accent)]"
-          [class.bg-[var(--accent)]]="channelsService.selectedChannel() === channel.id"
-          (click)="channelsService.selectChannel(channel.id)"
-        >
-          # {{ channel.name }}
-        </button>
-
-        <!-- Ellipsis + dropdown container -->
-        @if (authService.isSuperAdmin() || authService.isGroupAdmin() ||
-        groupsService.isGroupOwner()) {
-        <div class="relative">
-          <!-- Ellipsis button (only show on hover) -->
+    <div class="p-3">
+      <div class="text-xs uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
+        Channels
+      </div>
+      <!-- Channel list -->
+      <div class="space-y-1 relative">
+        @for (channel of channelsService.channels(); track channel.id) {
+        <div class="flex items-center justify-between group">
           <button
-            class="opacity-0 group-hover:opacity-100 px-2 py-1 text-sm hover:bg-[var(--accent)] rounded transition-opacity"
-            (click)="toggleDropdown(channel.id)"
-            [class.bg-[var(--accent)]]="showDropdownId === channel.id"
+            class="flex-1 text-left px-2 py-1 rounded text-sm hover:bg-[var(--accent)]"
+            [class.bg-[var(--accent)]]="channelsService.selectedChannel() === channel.id"
+            (click)="channelsService.selectChannel(channel.id)"
           >
-            ⋯
+            # {{ channel.name }}
           </button>
-
-          <!-- Dropdown menu (positioned next to ellipsis) -->
-          @if (showDropdownId !== null && showDropdownId === channel.id) {
-          <div
-            class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-[var(--popover)] border border-[var(--border)] rounded shadow-lg z-10"
-          >
+          <!-- Ellipsis + dropdown container -->
+          @if (authService.isSuperAdmin() || authService.isGroupAdmin() ||
+          groupsService.isGroupAdmin()) {
+          <div class="relative">
+            <!-- More button (only show on hover) -->
             <button
-              class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--accent)] text-[var(--destructive)]"
-              (click)="deleteChannel(channel.id)"
+              class="opacity-0 group-hover:opacity-100 px-2 py-1 hover:bg-[var(--accent)] rounded transition-opacity"
+              (click)="toggleDropdown(channel.id)"
+              [class.bg-[var(--accent)]]="showDropdownId === channel.id"
             >
-              Delete
+              <lucide-icon [img]="MoreIcon" class="w-4 h-4 text-[var(--muted-foreground)]" />
             </button>
+            <!-- Dropdown menu (positioned next to more button) -->
+            @if (showDropdownId !== null && showDropdownId === channel.id) {
+            <div
+              class="absolute right-full mr-2 top-1/2 -translate-y-1/2 min-w-36 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--popover)] shadow-lg z-10"
+            >
+              <a
+                class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                (click)="deleteChannel(channel.id)"
+              >
+                <lucide-icon [img]="DeleteChannelIcon" class="w-4 h-4 mr-2" />
+                Delete '{{ channel.name }}'
+              </a>
+            </div>
+            }
           </div>
           }
         </div>
         }
+        <!-- Click-away overlay -->
+        @if (showDropdownId !== null) {
+        <div class="fixed inset-0 z-0" (click)="closeDropdown()"></div>
+        }
       </div>
-      }
-
-      <!-- Click-away overlay -->
-      @if (showDropdownId !== null) {
-      <div class="fixed inset-0 z-0" (click)="closeDropdown()"></div>
-      }
     </div>
   </div>
 
@@ -78,3 +147,5 @@
     {{ groupsService.getSelectedGroup()?.name || 'No group selected' }}
   </div>
 </div>
+
+<app-confirm-modal (confirmed)="onConfirmModal()" (cancelled)="onCancelModal()" />

@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 const Group = require('../data/groups/group.js');
-const groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
+let groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
+const groupsPath = path.join(__dirname, '../data/groups/groups.json');
 
 // Get group list
 router.get('/', async (req, res) => {
@@ -52,22 +53,28 @@ router.post('/', (req, res) => {
     if (!id) {
       return res.status(400).json({ error: 'Group owner ID is not valid' });
     }
+    const ownerId = Number(id);
+    if (!Number.isInteger(ownerId)) {
+      return res.status(400).json({ error: 'Group owner ID is not valid' });
+    }
+
+    const users = JSON.parse(
+      require('../read-json.js').readJsonAsString('./data/users/users.json')
+    );
+    const superAdminIds = users.filter((u) => u.roles.includes('superadmin')).map((u) => u.id);
 
     const newId = Math.max(...groups.map((g) => g.id), 0) + 1;
-
     const newGroup = {
       id: newId,
       name: name.trim(),
       icon: image || '',
-      owner: id,
-      members: [id],
-      admins: [id],
+      owner: ownerId,
+      members: [ownerId],
+      admins: Array.from(new Set([ownerId, ...superAdminIds])),
       channels: [],
     };
 
     groups.push(newGroup);
-
-    const groupsPath = path.join(__dirname, '../data/groups/groups.json');
     fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
 
     res.status(201).json(newGroup);
@@ -104,7 +111,7 @@ router.delete('/:userId', (req, res) => {
 });
 
 // Delete a group
-router.delete('/:groupId', (req, res) => {
+router.delete('/delete/:groupId', (req, res) => {
   const groupId = parseInt(req.params.groupId);
   groups = groups.filter((g) => g.id !== groupId);
   fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));

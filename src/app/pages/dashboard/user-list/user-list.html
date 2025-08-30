@@ -86,10 +86,7 @@
             }
             <div class="min-w-0">
               <div class="text-sm font-semibold truncate">
-                {{ user.username }}
-                @if (groupsService.getSelectedGroup()?.owner === user.id) {
-                <span class="ml-1" title="Owner">👑</span>
-                }
+                {{ user.username }}    
               </div>
               <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
@@ -119,9 +116,6 @@
             <div class="min-w-0">
               <div class="text-sm font-semibold truncate">
                 {{ user.username }}
-                @if (groupsService.getSelectedGroup()?.owner === user.id) {
-                <span class="ml-1" title="Owner">👑</span>
-                }
               </div>
               <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
