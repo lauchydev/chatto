@@ -123,6 +123,7 @@ export class Profile implements OnInit, OnDestroy {
           this.user = { ...updatedUser };
           this.originalUser = { ...this.user };
           this.editMode = false;
+          localStorage.setItem('user', JSON.stringify(this.user));
         },
         error: (error) => {
           console.error('Failed to save user: ', error);
@@ -144,10 +145,10 @@ export class Profile implements OnInit, OnDestroy {
     this.deleteProfileConfirm.confirmText = 'Delete Account';
     this.deleteProfileConfirm.cancelText = 'Cancel';
     this.deleteProfileConfirm.destructive = true;
-  
+
     this.deleteProfileConfirm.openModal();
   }
-  
+
   confirmDeleteProfile(): void {
     if (!this.user) return;
     this.userService.deleteUser(this.user.id).subscribe({

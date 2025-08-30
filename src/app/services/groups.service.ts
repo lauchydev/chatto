@@ -65,6 +65,10 @@ export class Groups {
     return this._groups().find((group) => group.id === selectedId) || null;
   }
 
+  getGroup(groupId: number): GroupApi | null {
+    return this._groups().find((group) => group.id === groupId) || null;
+  }
+
   // CRUD Operations (keep these - they belong here)
   createGroup(name: string, id: Number, image?: string): Observable<GroupApi> {
     return this.http.post<GroupApi>(`${this.localurl}/api/groups`, {

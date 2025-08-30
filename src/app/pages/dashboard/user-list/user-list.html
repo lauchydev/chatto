@@ -1,5 +1,195 @@
 <div
-  class="flex h-screen w-64 flex-col justify-between border-e border-[var(--border)] bg-[var(--sidebar-bg)] text-white text-center"
+  class="flex h-screen w-64 flex-col justify-between border-s border-[var(--border)] bg-[var(--sidebar-bg)] text-white"
 >
-  <div class="mt-5">User List</div>
+  <div class="p-3">
+    <div class="text-xs uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
+      TOTAL —
+      <span class="ml-1 text-[var(--muted-foreground)]">
+        @if (superAdminUsers || groupAdminUsers || memberUsers) {
+        {{
+          (superAdminUsers.length || 0) + (groupAdminUsers.length || 0) + (memberUsers.length || 0)
+        }}
+        } @else { 0 }
+      </span>
+    </div>
+
+    @if (loading) {
+    <div class="space-y-2">
+      <div class="flex items-center gap-2 animate-pulse">
+        <div class="w-6 h-6 rounded-full bg-[var(--muted)]"></div>
+        <div class="h-3 w-28 rounded bg-[var(--muted)]"></div>
+      </div>
+      <div class="flex items-center gap-2 animate-pulse">
+        <div class="w-6 h-6 rounded-full bg-[var(--muted)]"></div>
+        <div class="h-3 w-24 rounded bg-[var(--muted)]"></div>
+      </div>
+      <div class="flex items-center gap-2 animate-pulse">
+        <div class="w-6 h-6 rounded-full bg-[var(--muted)]"></div>
+        <div class="h-3 w-32 rounded bg-[var(--muted)]"></div>
+      </div>
+    </div>
+    } @if (!loading && error) {
+    <div
+      class="p-2 rounded border border-[var(--border)] bg-[rgba(237,66,69,0.1)] text-[var(--destructive)] text-sm"
+    >
+      {{ error }}
+    </div>
+    } @if (!loading && !error) {
+    <div class="space-y-4">
+      @if (superAdminUsers.length) {
+      <div>
+        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
+          Super Admins — {{ superAdminUsers.length }}
+        </div>
+        <div class="space-y-2">
+          @for (user of superAdminUsers; track user.id) {
+          <div
+            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+          >
+            @if (user.image && user.image !== '') {
+            <img
+              [src]="user.image"
+              [alt]="user.username"
+              class="w-10 h-10 rounded-md object-cover"
+            />
+            } @else {
+            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            }
+            <div class="min-w-0">
+              <div class="text-sm font-semibold truncate">
+                {{ user.username }}
+              </div>
+              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      } @if (groupAdminUsers.length) {
+      <div>
+        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
+          Admins — {{ groupAdminUsers.length }}
+        </div>
+        <div class="space-y-2">
+          @for (user of groupAdminUsers; track user.id) {
+          <div
+            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+          >
+            @if (user.image && user.image !== '') {
+            <img
+              [src]="user.image"
+              [alt]="user.username"
+              class="w-10 h-10 rounded-md object-cover"
+            />
+            } @else {
+            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            }
+            <div class="min-w-0">
+              <div class="text-sm font-semibold truncate">
+                {{ user.username }}
+                @if (groupsService.getSelectedGroup()?.owner === user.id) {
+                <span class="ml-1" title="Owner">👑</span>
+                }
+              </div>
+              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      } @if (memberUsers.length) {
+      <div>
+        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
+          Members — {{ memberUsers.length }}
+        </div>
+        <div class="space-y-2">
+          @for (user of memberUsers; track user.id) {
+          <div
+            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+          >
+            @if (user.image && user.image !== '') {
+            <img
+              [src]="user.image"
+              [alt]="user.username"
+              class="w-10 h-10 rounded-md object-cover"
+            />
+            } @else {
+            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            }
+            <div class="min-w-0">
+              <div class="text-sm font-semibold truncate">
+                {{ user.username }}
+                @if (groupsService.getSelectedGroup()?.owner === user.id) {
+                <span class="ml-1" title="Owner">👑</span>
+                }
+              </div>
+              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <div>
+        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2 pt-4">Requests</div>
+        @if (!joinRequests || joinRequests.length === 0) {
+        <div class="text-sm text-[var(--muted-foreground)]">There are no pending requests</div>
+        } @else {
+        <div class="space-y-2">
+          @for (request of joinRequests; track request.id) {
+          <div
+            class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)]"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              @if (request.image && request.image !== '') {
+              <img
+                [src]="request.image"
+                [alt]="request.username"
+                class="w-10 h-10 rounded-md object-cover"
+              />
+              } @else {
+              <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+              }
+              <div class="min-w-0">
+                <div class="text-sm font-semibold truncate">{{ request.username }}</div>
+                <div class="text-xs text-[var(--muted-foreground)] truncate">
+                  {{ request.email }}
+                </div>
+              </div>
+            </div>
+            @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
+            <div class="flex items-center gap-2">
+              <a
+                role="button"
+                tabindex="0"
+                (click)="approveRequest(request.id)"
+                (keydown.enter)="approveRequest(request.id)"
+                (keydown.space)="approveRequest(request.id)"
+                class="px-2 py-1 rounded text-xs bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[#4752c4] cursor-pointer"
+                >Approve</a
+              >
+              <a
+                role="button"
+                tabindex="0"
+                (click)="rejectRequest(request.id)"
+                (keydown.enter)="rejectRequest(request.id)"
+                (keydown.space)="rejectRequest(request.id)"
+                class="px-2 py-1 rounded text-xs text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                >Reject</a
+              >
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="p-3 text-[var(--muted-foreground)] text-xs">
+    {{ authService.getCurrentUser()?.username || 'Guest' }}
+  </div>
 </div>
