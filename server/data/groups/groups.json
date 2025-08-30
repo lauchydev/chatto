@@ -4,13 +4,17 @@
     "name": "First Server",
     "icon": "",
     "owner": 2,
-    "members": [
-      2
-    ],
-    "admins": [
-      2,
-      1
-    ],
-    "channels": []
+    "members": [2, 3],
+    "admins": [2, 1],
+    "requests": []
+  },
+  {
+    "id": 2,
+    "name": "Group 2",
+    "icon": "",
+    "owner": 1,
+    "members": [1],
+    "admins": [1],
+    "requests": [3]
   }
 ]
