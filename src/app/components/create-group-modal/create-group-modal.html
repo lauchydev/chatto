@@ -1,9 +1,12 @@
 @if (isOpen()) {
 <!-- Backdrop -->
-<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" (click)="closeModal()">
+<div
+  class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center"
+  (click)="closeModal()"
+>
   <!-- Modal Container -->
   <div
-    class="bg-[var(--background)] border border-[var(--border)] rounded-lg shadow-lg w-full max-w-md mx-4"
+    class="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl w-full max-w-md mx-4"
     (click)="$event.stopPropagation()"
   >
     <!-- Header -->

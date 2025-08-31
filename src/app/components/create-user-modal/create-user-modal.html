@@ -20,7 +20,7 @@
         <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Username</label>
         <div class="relative">
           <input
-            class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            class="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             type="text"
             name="username"
             #usernameField="ngModel"
@@ -56,7 +56,7 @@
       <div>
         <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Email</label>
         <input
-          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           type="email"
           name="email"
           #emailField="ngModel"
@@ -77,7 +77,7 @@
       <div>
         <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Password</label>
         <input
-          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           type="password"
           name="password"
           #passwordField="ngModel"
@@ -101,7 +101,7 @@
           >Birthdate (Optional)</label
         >
         <input
-          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           type="date"
           name="birthdate"
           [(ngModel)]="newUser.birthdate"
@@ -114,7 +114,7 @@
           >Age (Optional)</label
         >
         <input
-          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           type="number"
           name="age"
           min="0"

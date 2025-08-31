@@ -4,19 +4,34 @@
     "name": "First Server",
     "icon": "",
     "owner": 2,
-    "members": [2, 3, 4],
-    "admins": [2, 1, 4],
+    "members": [
+      2,
+      3,
+      4
+    ],
+    "admins": [
+      2,
+      1,
+      4
+    ],
     "requests": [],
-    "banned": []
+    "banned": [],
+    "channels": []
   },
   {
     "id": 2,
     "name": "Group 2",
     "icon": "",
     "owner": 1,
-    "members": [1],
-    "admins": [1],
-    "requests": [3],
+    "members": [
+      1
+    ],
+    "admins": [
+      1
+    ],
+    "requests": [
+      3
+    ],
     "banned": []
   }
 ]
