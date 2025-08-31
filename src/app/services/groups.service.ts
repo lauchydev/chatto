@@ -38,7 +38,13 @@ export class Groups {
     this.getUserGroups().subscribe({
       next: (groups: GroupApi[]) => {
         this._groups.set(groups);
-        if (!this._selectedGroupId() && groups && groups.length > 0) {
+        // Restore last selected group if available and valid
+        const saved = localStorage.getItem('selectedGroupId');
+        const savedId = saved ? parseInt(saved) : NaN;
+        const hasSaved = Number.isInteger(savedId) && groups.some((g) => g.id === savedId);
+        if (hasSaved) {
+          this._selectedGroupId.set(savedId);
+        } else if (!this._selectedGroupId() && groups && groups.length > 0) {
           this._selectedGroupId.set(groups[0].id);
         }
         this._loading.set(false);
@@ -53,6 +59,9 @@ export class Groups {
 
   selectGroup(groupId: number): void {
     this._selectedGroupId.set(groupId);
+    try {
+      localStorage.setItem('selectedGroupId', String(groupId));
+    } catch {}
   }
 
   isGroupSelected(groupId: number): boolean {
