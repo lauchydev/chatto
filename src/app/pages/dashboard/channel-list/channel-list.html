@@ -150,10 +150,6 @@
       } @else { }
     </div>
   </div>
-
-  <div class="p-3 text-[var(--muted-foreground)] text-xs">
-    {{ groupsService.getSelectedGroup()?.name || 'No group selected' }}
-  </div>
 </div>
 
 <app-confirm-modal (confirmed)="onConfirmModal()" (cancelled)="onCancelModal()" />

@@ -4,7 +4,7 @@
     "username": "super",
     "email": "super@email.com",
     "birthdate": "2001-01-05",
-    "image": "",
+    "image": "https://imgcdn.stablediffusionweb.com/2024/4/7/76683d35-d0e9-4bf4-a630-99a6cc7da8c2.jpg",
     "age": 20,
     "roles": [
       "superadmin"
@@ -16,9 +16,9 @@
   },
   {
     "id": 2,
-    "username": "groupadmin",
-    "email": "groupadmin",
-    "image": "",
+    "username": "Charlie",
+    "email": "charlie@email.com",
+    "image": "https://imgcdn.stablediffusionweb.com/2024/4/21/ef5c1523-2585-4e05-8a46-76391f68f5c9.jpg",
     "birthdate": "2003-04-13",
     "age": 20,
     "roles": [
@@ -31,9 +31,9 @@
   },
   {
     "id": 3,
-    "username": "user",
-    "email": "user",
-    "image": "",
+    "username": "Emily",
+    "email": "emily@email.com",
+    "image": "https://imgcdn.stablediffusionweb.com/2024/3/31/a07c234b-ab97-4ad4-96b1-e1e88ec45e45.jpg",
     "birthdate": "2005-05-02",
     "age": 20,
     "roles": [
@@ -46,17 +46,47 @@
   },
   {
     "id": 4,
-    "username": "admin2",
-    "email": "admin2",
-    "password": "admin2",
+    "username": "John",
+    "email": "john@email.com",
+    "image": "https://t4.ftcdn.net/jpg/12/74/13/73/360_F_1274137308_UN0jOLV8agq0VKsKsUUk4tl9HK2YFbsR.jpg",
+    "password": "user",
     "birthdate": "",
     "age": null,
     "roles": [
-      "user",
-      "groupadmin"
+      "user"
     ],
     "valid": true,
     "banned": false,
     "reported": false
+  },
+  {
+    "id": 5,
+    "username": "Rebecca",
+    "email": "rebecca@email.com",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlvKCOCHPpNHuj0Ek66OSIZ4ulrO9OvlPK8UZH_lTuYFqsFpfSlUjPkzuOr9wyRZTPwKg&usqp=CAU",
+    "password": "user",
+    "birthdate": "",
+    "age": 30,
+    "roles": [
+      "user"
+    ],
+    "valid": true,
+    "banned": true,
+    "reported": false
+  },
+  {
+    "id": 6,
+    "username": "Maddison",
+    "email": "maddison@email.com",
+    "image": "https://imgcdn.stablediffusionweb.com/2024/4/19/ade3837f-3afa-4571-ab3e-9e10a3796288.jpg",
+    "password": "user",
+    "birthdate": "",
+    "age": 27,
+    "roles": [
+      "user"
+    ],
+    "valid": true,
+    "banned": false,
+    "reported": true
   }
 ]

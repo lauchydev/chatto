@@ -22,6 +22,7 @@ router.post('', async (req, res) => {
       user.id = users[i].id;
       user.username = users[i].username;
       user.email = users[i].email;
+      user.image = users[i].image;
       user.birthdate = users[i].birthdate;
       user.age = users[i].age;
       user.roles = users[i].roles;

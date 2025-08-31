@@ -14,7 +14,11 @@
               (click)="toggleProfileDropdown()"
             >
               @if (authService.getCurrentUser() && authService.getCurrentUser()?.image !== "") {
-              <img src="default-avatar.svg" alt="" class="w-full h-full object-cover rounded-xl" />
+              <img
+                [src]="authService.getCurrentUser()?.image || 'assets/default-avatar.svg'"
+                [alt]="authService.getCurrentUser()?.username || 'User avatar'"
+                class="w-full h-full object-cover rounded-xl"
+              />
 
               } @else {
               <img src="default-avatar.svg" alt="" />

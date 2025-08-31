@@ -55,7 +55,7 @@ router.put('/:id', (req, res) => {
 // POST /api/users (Create new user)
 router.post('/', (req, res) => {
   try {
-    const { username, email, password, birthdate, age, roles, groups } = req.body;
+    const { username, email, image, password, birthdate, age, roles } = req.body;
 
     // Validation
     if (!username || !email || !password) {
@@ -79,6 +79,7 @@ router.post('/', (req, res) => {
       id: newId,
       username: username,
       email: email,
+      image: image || '',
       password: password,
       birthdate: birthdate || '',
       age: age || null,
