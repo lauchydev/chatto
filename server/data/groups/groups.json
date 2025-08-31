@@ -16,7 +16,9 @@
     ],
     "requests": [],
     "banned": [],
-    "channels": []
+    "channels": [
+      2
+    ]
   },
   {
     "id": 2,

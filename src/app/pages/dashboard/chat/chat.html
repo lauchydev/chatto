@@ -1,8 +1,28 @@
 <div class="flex-1 bg-[var(--chat-bg)]">
+  @if (!channelsService.getSelectedChannel()) {
   <div class="h-full flex items-center justify-center">
     <div class="text-center">
       <h2 class="text-2xl font-semibold text-[var(--foreground)] mb-2">Welcome to Chatto</h2>
       <p class="text-[var(--muted-foreground)]">Select a channel to start chatting</p>
     </div>
   </div>
+  } @else {
+  <div class="h-full flex flex-col">
+    <!-- Channel header -->
+    <div class="h-12 flex items-center px-4 border-b border-[var(--border)] bg-[var(--chat-bg)]">
+      <div class="font-medium text-[var(--foreground)]">
+        # {{ channelsService.getSelectedChannel()?.name }}
+      </div>
+    </div>
+
+    <!-- Messages area (placeholder) -->
+    <div class="flex-1 p-4 overflow-y-auto">
+      <div class="h-full flex items-center justify-center">
+        <p class="text-[var(--muted-foreground)]">
+          No messages in <b>#{{ channelsService.getSelectedChannel()?.name }}</b> yet.
+        </p>
+      </div>
+    </div>
+  </div>
+  }
 </div>

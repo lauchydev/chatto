@@ -105,13 +105,13 @@
       <div class="space-y-1 relative">
         @for (channel of channelsService.channels(); track channel.id) {
         <div class="flex items-center justify-between group">
-          <button
-            class="flex-1 text-left px-2 py-1 rounded text-sm hover:bg-[var(--accent)]"
+          <a
+            class="flex-1 text-left px-2 py-1 rounded text-sm hover:bg-[var(--accent)] cursor-pointer"
             [class.bg-[var(--accent)]]="channelsService.selectedChannel() === channel.id"
             (click)="channelsService.selectChannel(channel.id)"
           >
             # {{ channel.name }}
-          </button>
+          </a>
           <!-- Ellipsis + dropdown container -->
           @if (authService.isSuperAdmin() || authService.isGroupAdmin() ||
           groupsService.isGroupAdmin()) {
