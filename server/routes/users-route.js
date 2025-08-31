@@ -10,7 +10,7 @@ const groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/gr
 router.get('/:id', (req, res) => {
   const userId = parseInt(req.params.id);
   const user = users.find((user) => user.id === userId);
-  return user ? res.json(user) : res.status(404).json({ error: 'User not found' });
+  return user ? res.success(user) : res.fail(404, 'User not found');
 });
 
 // GET /api/users
@@ -21,10 +21,10 @@ router.get('/', (req, res) => {
     // GET /api/users?ids=1,2,3
     const userIds = ids.split(',').map((id) => parseInt(id));
     const filteredUsers = users.filter((user) => userIds.includes(user.id));
-    return res.status(200).json(filteredUsers);
+    return res.success(filteredUsers);
   }
   // GET /api/users
-  return res.status(200).json(users);
+  return res.success(users);
 });
 
 // GET /api/users/check-username/:username
@@ -32,10 +32,10 @@ router.get('/check-username/:username', (req, res) => {
   const username = req.params.username.toLowerCase().trim();
 
   if (!username) {
-    return res.status(400).json({ error: 'Username is required' });
+    return res.fail(400, 'Username is required');
   }
   const existingUser = users.find((user) => user.username.toLowerCase() === username);
-  res.json({ exists: !!existingUser });
+  return res.success({ exists: !!existingUser });
 });
 
 // PUT /api/users/:id
@@ -44,12 +44,12 @@ router.put('/:id', (req, res) => {
   const userIndex = users.findIndex((user) => user.id === userId);
 
   if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.fail(404, 'User not found');
   }
   users[userIndex] = { ...users[userIndex], ...req.body };
   const usersPath = path.join(__dirname, '../data/users/users.json');
   fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-  res.status(200).json(users[userIndex]);
+  return res.success(users[userIndex]);
 });
 
 // POST /api/users (Create new user)
@@ -59,7 +59,7 @@ router.post('/', (req, res) => {
 
     // Validation
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Username, email, and password are required' });
+      return res.fail(400, 'Username, email, and password are required');
     }
 
     // Check if username already exists
@@ -68,7 +68,7 @@ router.post('/', (req, res) => {
     );
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Username already exists' });
+      return res.fail(400, 'Username already exists');
     }
 
     // Generate new ID
@@ -97,24 +97,24 @@ router.post('/', (req, res) => {
 
     // Return user without password
     const { password: _, ...userResponse } = newUser;
-    res.status(201).json(userResponse);
+    return res.created(userResponse);
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    return res.fail(500, 'Failed to create user');
   }
 });
 
 router.post('/:id/report', (req, res) => {
   const userId = parseInt(req.params.id);
   const userIndex = users.findIndex((u) => u.id === userId);
-  if (userIndex === -1) return res.status(404).json({ error: 'User not found' });
+  if (userIndex === -1) return res.fail(404, 'User not found');
 
   users[userIndex].reported = true;
 
   const usersPath = path.join(__dirname, '../data/users/users.json');
   fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
-  res.status(200).json({ ok: true });
+  return res.success({ ok: true });
 });
 
 // DELETE /api/users/:id
@@ -123,7 +123,7 @@ router.delete('/:id', (req, res) => {
   const userIndex = users.findIndex((user) => user.id === userId);
 
   if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.fail(404, 'User not found');
   }
 
   // 1. Remove user from users array
@@ -156,7 +156,7 @@ router.delete('/:id', (req, res) => {
   fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
   fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
 
-  res.status(200).json({ message: 'User deleted successfully' });
+  return res.success({ message: 'User deleted successfully' });
 });
 
 module.exports = router;

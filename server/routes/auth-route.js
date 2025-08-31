@@ -6,7 +6,7 @@ const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/use
 
 router.post('', async (req, res) => {
   if (!req.body) {
-    return res.sendStatus(400);
+    return res.fail(400, 'Request body required');
   }
 
   let user = new User();
@@ -17,7 +17,7 @@ router.post('', async (req, res) => {
       req.body.password == users[i].password
     ) {
       if (users[i].banned === true) {
-        return res.send({ valid: false, banned: true });
+        return res.success({ valid: false, banned: true });
       }
       user.id = users[i].id;
       user.username = users[i].username;
@@ -31,9 +31,9 @@ router.post('', async (req, res) => {
     }
   }
   if (user.valid) {
-    res.send(user);
+    return res.success(user);
   } else {
-    res.send({ valid: false });
+    return res.success({ valid: false });
   }
 });
 

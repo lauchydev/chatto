@@ -16,8 +16,10 @@ export interface Group {
   id: number;
   name: string;
   icon?: string;
-  owner: number;
+  owner: User;
   members: User[];
   admins: User[];
-  channels: Channel[];
+  channels?: Channel[];
+  requests?: User[];
+  banned?: User[];
 }
