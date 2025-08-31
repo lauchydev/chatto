@@ -5,7 +5,7 @@ import { User } from '../../../model/user.interface';
 import { Groups } from '../../../services/groups.service';
 import { effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Check, LucideAngularModule, X } from 'lucide-angular';
+import { Check, LucideAngularModule, MoreHorizontal, X } from 'lucide-angular';
 
 @Component({
   selector: 'app-user-list',
@@ -22,15 +22,18 @@ export class UserList {
   /* Icons */
   readonly AllowIcon = Check;
   readonly RejectIcon = X;
+  readonly MoreIcon = MoreHorizontal;
 
   /* Data Variables */
   superAdminUsers: User[] = [];
   groupAdminUsers: User[] = [];
   memberUsers: User[] = [];
   joinRequests: User[] = [];
+  bannedUsers: User[] = [];
   protected loading = false;
   protected error = '';
   private lastGroupId: number | null = null;
+  showUserDropdownId: number | null = null;
 
   /* Effect to load users on group selection */
   private userListEffect = effect(() => {
@@ -39,27 +42,56 @@ export class UserList {
       this.superAdminUsers = [];
       this.groupAdminUsers = [];
       this.memberUsers = [];
+      this.bannedUsers = [];
       this.loading = false;
       return;
     }
     if (id === this.lastGroupId) return;
     this.lastGroupId = id;
-    this.loadGroupUsers(id);
-    this.loadGroupRequests();
+    this.loadAllGroupData(id);
   });
 
-  /* Actual user loading logic */
-  private loadGroupUsers(id: number): void {
+  /* Consolidated loading logic */
+  private loadAllGroupData(id: number): void {
     this.loading = true;
     this.error = '';
 
     const group = this.groupsService.getGroup(id);
-    if (!group) return console.error('Failed to get group from id: ', id);
+    if (!group) {
+      console.error('Failed to get group from id: ', id);
+      this.superAdminUsers = [];
+      this.groupAdminUsers = [];
+      this.memberUsers = [];
+      this.joinRequests = [];
+      this.bannedUsers = [];
+      this.loading = false;
+      return;
+    }
 
     const ownerId = group.owner;
-    const adminSet = new Set(group.admins);
-    const memberSet = new Set(group.members);
-    const ids = Array.from(new Set([ownerId, ...group.admins, ...group.members]));
+    const admins = Array.isArray(group.admins) ? group.admins : [];
+    const members = Array.isArray(group.members) ? group.members : [];
+    const requests = Array.isArray((group as any).requests)
+      ? ((group as any).requests as number[])
+      : [];
+    const banned = Array.isArray((group as any).banned) ? ((group as any).banned as number[]) : [];
+
+    const adminSet = new Set(admins);
+    const memberSet = new Set(members);
+    const requestSet = new Set(requests);
+    const bannedSet = new Set(banned);
+
+    const ids = Array.from(new Set([ownerId, ...admins, ...members, ...requests, ...banned]));
+
+    if (ids.length === 0) {
+      this.superAdminUsers = [];
+      this.groupAdminUsers = [];
+      this.memberUsers = [];
+      this.joinRequests = [];
+      this.bannedUsers = [];
+      this.loading = false;
+      return;
+    }
 
     this.usersService.getUsers(ids).subscribe({
       next: (users) => {
@@ -70,46 +102,102 @@ export class UserList {
         this.memberUsers = users.filter(
           (u) => !u.roles?.includes('superadmin') && !adminSet.has(u.id) && memberSet.has(u.id)
         );
+        this.joinRequests = users.filter((u) => requestSet.has(u.id));
+        this.bannedUsers = users.filter((u) => bannedSet.has(u.id));
         this.loading = false;
       },
       error: (error) => {
-        console.error('Failed to load users: ', error);
+        console.error('Failed to load group data: ', error);
         this.error = 'Failed to load users';
         this.loading = false;
       },
     });
   }
 
-  private loadGroupRequests(): void {
-    this.loading = true;
-    this.error = '';
+  onUserClick(userId: number): void {
+    this.toggleUserDropdown(userId);
+  }
 
-    const group = this.groupsService.getSelectedGroup();
-    if (!group) {
-      this.joinRequests = [];
-      this.loading = false;
-      return;
-    }
+  toggleUserDropdown(userId: number): void {
+    this.showUserDropdownId = this.showUserDropdownId === userId ? null : userId;
+  }
 
-    const requestIds: number[] = Array.isArray((group as any).requests)
-      ? ((group as any).requests as number[])
-      : [];
+  closeUserDropdown(): void {
+    this.showUserDropdownId = null;
+  }
 
-    if (requestIds.length === 0) {
-      this.joinRequests = [];
-      this.loading = false;
-      return;
-    }
-
-    this.usersService.getUsers(requestIds).subscribe({
-      next: (users) => {
-        this.joinRequests = users;
-        this.loading = false;
-      },
+  onReportUser(user: User): void {
+    this.closeUserDropdown();
+    this.usersService.reportUser(user.id).subscribe({
+      next: () => {},
       error: (error) => {
-        console.error('Failed to load join requests: ', error);
-        this.error = 'Failed to load join requests';
-        this.loading = false;
+        console.error('Failed to report user: ', error);
+        this.error = 'Failed to report user';
+      },
+    });
+  }
+
+  onKickUser(user: User): void {
+    this.closeUserDropdown();
+    const groupId = this.groupsService.getSelectedGroup()?.id;
+    if (!groupId) return;
+
+    const wasAdmin = this.groupAdminUsers.some((u) => u.id === user.id);
+    const prevAdmins = this.groupAdminUsers;
+    const prevMembers = this.memberUsers;
+
+    this.groupAdminUsers = this.groupAdminUsers.filter((u) => u.id !== user.id);
+    this.memberUsers = this.memberUsers.filter((u) => u.id !== user.id);
+
+    this.groupsService.kickUser(groupId, user.id).subscribe({
+      next: () => this.groupsService.refreshGroups(),
+      error: (error) => {
+        console.error('Failed to kick user: ', error);
+        this.error = 'Failed to kick user';
+        this.groupAdminUsers = prevAdmins;
+        this.memberUsers = prevMembers;
+      },
+    });
+  }
+
+  onBanUser(user: User): void {
+    this.closeUserDropdown();
+    const groupId = this.groupsService.getSelectedGroup()?.id;
+    if (!groupId) return;
+
+    const prevAdmins = this.groupAdminUsers;
+    const prevMembers = this.memberUsers;
+
+    this.groupAdminUsers = this.groupAdminUsers.filter((u) => u.id !== user.id);
+    this.memberUsers = this.memberUsers.filter((u) => u.id !== user.id);
+
+    this.groupsService.banUser(groupId, user.id).subscribe({
+      next: () => this.groupsService.refreshGroups(),
+      error: (err) => {
+        console.error('Ban failed: ', err);
+        this.error = 'Failed to ban user';
+        this.groupAdminUsers = prevAdmins;
+        this.memberUsers = prevMembers;
+      },
+    });
+  }
+
+  onUnbanUser(user: User): void {
+    this.closeUserDropdown();
+    const groupId = this.groupsService.getSelectedGroup()?.id;
+    if (!groupId) return;
+
+    const prevBanned = this.bannedUsers;
+    this.bannedUsers = this.bannedUsers.filter((u) => u.id !== user.id);
+
+    this.groupsService.unbanUser(groupId, user.id).subscribe({
+      next: () => {
+        this.groupsService.refreshGroups();
+      },
+      error: (err) => {
+        console.error('Unban failed: ', err);
+        this.error = 'Failed to unban user';
+        this.bannedUsers = prevBanned;
       },
     });
   }

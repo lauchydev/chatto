@@ -10,6 +10,7 @@ export interface GroupApi {
   admins: number[];
   channels?: number[];
   requests?: number[];
+  banned?: number[];
 }
 export interface Group {
   id: number;

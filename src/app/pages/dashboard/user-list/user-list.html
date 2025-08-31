@@ -1,18 +1,7 @@
 <div
   class="flex h-screen w-64 flex-col justify-between border-s border-[var(--border)] bg-[var(--sidebar-bg)] text-white"
 >
-  <div class="p-3">
-    <div class="text-xs uppercase tracking-wide text-[var(--muted-foreground)] mb-2">
-      TOTAL —
-      <span class="ml-1 text-[var(--muted-foreground)]">
-        @if (superAdminUsers || groupAdminUsers || memberUsers) {
-        {{
-          (superAdminUsers.length || 0) + (groupAdminUsers.length || 0) + (memberUsers.length || 0)
-        }}
-        } @else { 0 }
-      </span>
-    </div>
-
+  <div class="p-3 mt-2">
     @if (loading) {
     <div class="space-y-2">
       <div class="flex items-center gap-2 animate-pulse">
@@ -36,6 +25,7 @@
     </div>
     } @if (!loading && !error) {
     <div class="space-y-4">
+      <!-- SUPER ADMINS -->
       @if (superAdminUsers.length) {
       <div>
         <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
@@ -44,27 +34,31 @@
         <div class="space-y-2">
           @for (user of superAdminUsers; track user.id) {
           <div
-            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+            class="group flex items-center gap-2.5 px-2.5 py-1 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
           >
             @if (user.image && user.image !== '') {
             <img
               [src]="user.image"
               [alt]="user.username"
-              class="w-10 h-10 rounded-md object-cover"
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
             />
             } @else {
-            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            <img
+              src="default-avatar.svg"
+              alt=""
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
+            />
             }
             <div class="min-w-0">
-              <div class="text-sm font-semibold truncate">
+              <div class="text-sm font-semibold text-[var(--foreground)] truncate">
                 {{ user.username }}
               </div>
-              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
           </div>
           }
         </div>
       </div>
+      <!-- GROUP ADMINS -->
       } @if (groupAdminUsers.length) {
       <div>
         <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
@@ -72,28 +66,82 @@
         </div>
         <div class="space-y-2">
           @for (user of groupAdminUsers; track user.id) {
+
           <div
-            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+            class="group flex items-center gap-2.5 px-2.5 py-1 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
+            [class.cursor-pointer]="
+              user.id !== authService.getCurrentUser()?.id && authService.isSuperAdmin()
+            "
+            (click)="
+              user.id !== authService.getCurrentUser()?.id &&
+                onUserClick(user.id) &&
+                authService.isSuperAdmin()
+            "
           >
             @if (user.image && user.image !== '') {
             <img
               [src]="user.image"
               [alt]="user.username"
-              class="w-10 h-10 rounded-md object-cover"
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
             />
             } @else {
-            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            <img
+              src="default-avatar.svg"
+              alt=""
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
+            />
             }
             <div class="min-w-0">
-              <div class="text-sm font-semibold truncate">
+              <div class="text-sm font-semibold text-[var(--foreground)] truncate">
                 {{ user.username }}
               </div>
-              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
+            @if (user.id !== authService.getCurrentUser()?.id && authService.isSuperAdmin()) {
+            <div class="relative">
+              <a
+                class="ml-auto opacity-0 group-hover:opacity-100 px-2 py-1 text-sm hover:bg-[var(--accent)] rounded transition-opacity"
+                title="More"
+                type="button"
+              >
+                ⋯
+              </a>
+
+              @if (showUserDropdownId === user.id) {
+              <div
+                role="menu"
+                class="absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--dropdown)] shadow-lg z-50 divide-y divide-[var(--border)]"
+                (click)="$event.stopPropagation()"
+              >
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] hover:bg-[var(--accent)] cursor-pointer"
+                  (click)="onReportUser(user)"
+                >
+                  Report User
+                </a>
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                  (click)="onKickUser(user)"
+                >
+                  Kick User
+                </a>
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                  (click)="onBanUser(user)"
+                >
+                  Ban User
+                </a>
+              </div>
+              }
+            </div>
+            }
           </div>
           }
         </div>
       </div>
+      <!-- USERS -->
       } @if (memberUsers.length) {
       <div>
         <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2">
@@ -102,74 +150,125 @@
         <div class="space-y-2">
           @for (user of memberUsers; track user.id) {
           <div
-            class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent)]"
+            class="group flex items-center gap-2.5 px-2.5 py-1 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
+            [class.cursor-pointer]="
+              user.id !== authService.getCurrentUser()?.id && groupsService.isGroupAdmin()
+            "
+            (click)="
+              user.id !== authService.getCurrentUser()?.id &&
+                onUserClick(user.id) &&
+                groupsService.isGroupAdmin()
+            "
           >
             @if (user.image && user.image !== '') {
             <img
               [src]="user.image"
               [alt]="user.username"
-              class="w-10 h-10 rounded-md object-cover"
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
             />
             } @else {
-            <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+            <img
+              src="default-avatar.svg"
+              alt=""
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
+            />
             }
             <div class="min-w-0">
-              <div class="text-sm font-semibold truncate">
+              <div class="text-sm font-semibold text-[var(--foreground)] truncate">
                 {{ user.username }}
               </div>
-              <div class="text-xs text-[var(--muted-foreground)] truncate">{{ user.email }}</div>
             </div>
+            @if (user.id !== authService.getCurrentUser()?.id && (authService.isSuperAdmin() ||
+            groupsService.isGroupAdmin())) {
+            <div class="relative">
+              <a
+                class="ml-auto opacity-0 group-hover:opacity-100 px-2 py-1 text-sm hover:bg-[var(--accent)] rounded transition-opacity"
+                title="More"
+                type="button"
+              >
+                ⋯
+              </a>
+
+              @if (showUserDropdownId === user.id) {
+              <div
+                role="menu"
+                class="absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--dropdown)] shadow-lg z-50 divide-y divide-[var(--border)]"
+                (click)="$event.stopPropagation()"
+              >
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--popover-foreground)] hover:bg-[var(--accent)] cursor-pointer"
+                  (click)="onReportUser(user)"
+                >
+                  Report User
+                </a>
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                  (click)="onKickUser(user)"
+                >
+                  Kick User
+                </a>
+                <a
+                  role="menuitem"
+                  class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
+                  (click)="onBanUser(user)"
+                >
+                  Ban User
+                </a>
+              </div>
+              }
+            </div>
+            }
           </div>
           }
         </div>
       </div>
       } @if (groupsService.isGroupAdmin()) {
       <div>
-        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2 pt-4">Requests</div>
+        <div class="text-sm font-semibold text-[var(--muted-foreground)] mb-2 pt-4">
+          Requests — {{ joinRequests.length || 0 }}
+        </div>
         @if (!joinRequests || joinRequests.length === 0) {
         <div class="text-sm text-[var(--muted-foreground)]">There are no pending requests</div>
         } @else {
         <div class="space-y-2">
+          <!-- JOIN REQUESTS -->
           @for (request of joinRequests; track request.id) {
           <div
-            class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)]"
+            class="flex items-center justify-between gap-2.5 px-2.5 py-1 rounded-lg bg-[var(--card)] transition-colors"
           >
             <div class="flex items-center gap-3 min-w-0">
               @if (request.image && request.image !== '') {
               <img
                 [src]="request.image"
                 [alt]="request.username"
-                class="w-10 h-10 rounded-md object-cover"
+                class="w-9 h-9 rounded-md object-cover ring-1 ring-[var(--border)]"
               />
               } @else {
-              <img src="default-avatar.svg" alt="" class="w-10 h-10 rounded-md object-cover" />
+              <img
+                src="default-avatar.svg"
+                alt=""
+                class="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]"
+              />
               }
               <div class="min-w-0">
-                <div class="text-sm font-semibold truncate">{{ request.username }}</div>
-                <div class="text-xs text-[var(--muted-foreground)] truncate">
-                  {{ request.email }}
+                <div class="text-sm font-semibold text-[var(--foreground)] truncate">
+                  {{ request.username }}
                 </div>
               </div>
             </div>
             @if (authService.isSuperAdmin() || authService.isGroupAdmin()) {
             <div class="flex items-center gap-2">
               <a
-                role="button"
-                tabindex="0"
                 (click)="approveRequest(request.id)"
-                (keydown.enter)="approveRequest(request.id)"
-                (keydown.space)="approveRequest(request.id)"
-                class="px-2 py-1 rounded text-xs text-[var(--success)] hover:bg-[var(--success)]/10 cursor-pointer border border-[var(--success)]/50"
+                class="px-2 py-1 rounded text-xs text-[var(--success)] hover:bg-[var(--success)]/25 cursor-pointer border border-[var(--success)]/50"
               >
                 <lucide-icon [img]="AllowIcon" [size]="16" />
               </a>
               <a
-                role="button"
-                tabindex="0"
                 (click)="rejectRequest(request.id)"
-                (keydown.enter)="rejectRequest(request.id)"
-                (keydown.space)="rejectRequest(request.id)"
-                class="px-2 py-1 rounded text-xs text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer border border-[var(--destructive)]/50"
+                class="px-2 py-1 rounded text-xs text-[var(--destructive)] hover:bg-[var(--destructive)]/25 cursor-pointer border border-[var(--destructive)]/50"
               >
                 <lucide-icon [img]="RejectIcon" [size]="16" />
               </a>
@@ -179,6 +278,51 @@
           }
         </div>
         }
+        <div>
+          <div class="mt-5 text-sm font-semibold text-[var(--muted-foreground)] mb-2 pt-4">
+            Banned — {{ bannedUsers.length || 0 }}
+          </div>
+          @if (!bannedUsers || bannedUsers.length === 0) {
+          <div class="text-sm text-[var(--muted-foreground)]">There are no banned users</div>
+          } @else {
+          <div class="space-y-2">
+            @for (banned of bannedUsers; track banned.id) {
+            <div
+              class="group flex items-center justify-between gap-2.5 px-2.5 py-1 rounded-lg bg-[var(--card)]"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                @if (banned.image && banned.image !== '') {
+                <img
+                  [src]="banned.image"
+                  [alt]="banned.username"
+                  class="w-8 h-8 rounded-full object-cover ring-1 ring-[var(--border)]"
+                />
+                } @else {
+                <img
+                  src="default-avatar.svg"
+                  alt=""
+                  class="w-8 h-8 rounded-full object-cover ring-1 ring-[var(--border)]"
+                />
+                }
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-[var(--foreground)] truncate">
+                    {{ banned.username }}
+                  </div>
+                </div>
+              </div>
+              @if (authService.isSuperAdmin() || groupsService.isGroupAdmin()) {
+              <a
+                (click)="onUnbanUser(banned)"
+                class="px-2 py-1 rounded text-xs text-[var(--success)] hover:bg-[var(--success)]/25 cursor-pointer border border-[var(--success)]/50"
+              >
+                Unban
+              </a>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
       </div>
       }
     </div>
@@ -190,3 +334,7 @@
     {{ authService.getCurrentUser()?.username || 'Guest' }}
   </div>
 </div>
+
+@if (showUserDropdownId !== null) {
+<div class="fixed inset-0 z-40" (click)="closeUserDropdown()"></div>
+}

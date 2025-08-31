@@ -2,7 +2,7 @@
   {
     "id": 1,
     "username": "super",
-    "email": "super",
+    "email": "super@email.com",
     "birthdate": "2001-01-05",
     "image": "",
     "age": 20,
@@ -41,6 +41,21 @@
     ],
     "password": "user",
     "valid": false,
+    "banned": false,
+    "reported": false
+  },
+  {
+    "id": 4,
+    "username": "admin2",
+    "email": "admin2",
+    "password": "admin2",
+    "birthdate": "",
+    "age": null,
+    "roles": [
+      "user",
+      "groupadmin"
+    ],
+    "valid": true,
     "banned": false,
     "reported": false
   }

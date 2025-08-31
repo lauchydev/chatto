@@ -71,27 +71,10 @@ export class Groups {
     return this.http.get<GroupApi[]>(`${this.localurl}/api/groups/discover?userId=${userId}`);
   }
 
-  requestToJoin(groupId: number): Observable<void> {
-    const userId = this.authService.getUserId();
-    if (!userId) throw new Error('No user is logged in');
-    return this.http.post<void>(`${this.localurl}/api/groups/${groupId}/requests`, { userId });
-  }
-
-  rejectRequest(groupId: number, userId: number): Observable<void> {
-    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/requests/${userId}`);
-  }
-  approveRequest(groupId: number, userId: number): Observable<void> {
-    return this.http.post<void>(
-      `${this.localurl}/api/groups/${groupId}/requests/${userId}/approve`,
-      {}
-    );
-  }
-
   getGroup(groupId: number): GroupApi | null {
     return this._groups().find((group) => group.id === groupId) || null;
   }
 
-  // CRUD Operations (keep these - they belong here)
   createGroup(name: string, id: Number, image?: string): Observable<GroupApi> {
     return this.http.post<GroupApi>(`${this.localurl}/api/groups`, {
       id,
@@ -125,6 +108,29 @@ export class Groups {
     this._selectedGroupId.set(null);
   }
 
+  /**
+   *
+   *  USER OPERATIONS
+   *
+   */
+
+  kickUser(groupId: number, userId: number) {
+    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/users/${userId}`);
+  }
+
+  banUser(groupId: number, userId: number) {
+    return this.http.post<void>(`${this.localurl}/api/groups/${groupId}/ban/${userId}`, {});
+  }
+
+  unbanUser(groupId: number, userId: number) {
+    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/ban/${userId}`);
+  }
+
+  /**
+   *
+   *  USER HELPER FUNCTIONS
+   *
+   */
   isGroupAdmin(): boolean {
     const group = this.getSelectedGroup();
     const userId = this.authService.getUserId();
@@ -134,5 +140,22 @@ export class Groups {
       return this.authService.isSuperAdmin() || group.admins.includes(userId);
     }
     return false;
+  }
+
+  rejectRequest(groupId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.localurl}/api/groups/${groupId}/requests/${userId}`);
+  }
+
+  approveRequest(groupId: number, userId: number): Observable<void> {
+    return this.http.post<void>(
+      `${this.localurl}/api/groups/${groupId}/requests/${userId}/approve`,
+      {}
+    );
+  }
+
+  requestToJoin(groupId: number): Observable<void> {
+    const userId = this.authService.getUserId();
+    if (!userId) throw new Error('No user is logged in');
+    return this.http.post<void>(`${this.localurl}/api/groups/${groupId}/requests`, { userId });
   }
 }

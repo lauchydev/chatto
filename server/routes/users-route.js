@@ -64,8 +64,7 @@ router.post('/', (req, res) => {
 
     // Check if username already exists
     const existingUser = users.find(
-      (user) =>
-        user.username.toLowerCase() === username.toLowerCase()
+      (user) => user.username.toLowerCase() === username.toLowerCase()
     );
 
     if (existingUser) {
@@ -103,6 +102,19 @@ router.post('/', (req, res) => {
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Failed to create user' });
   }
+});
+
+router.post('/:id/report', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) return res.status(404).json({ error: 'User not found' });
+
+  users[userIndex].reported = true;
+
+  const usersPath = path.join(__dirname, '../data/users/users.json');
+  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+  res.status(200).json({ ok: true });
 });
 
 // DELETE /api/users/:id

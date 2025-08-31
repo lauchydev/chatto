@@ -1,138 +1,143 @@
 @if (isOpen()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center" (click)="closeModal()">
-    <!-- Overlay -->
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+<div class="fixed inset-0 z-50 flex items-center justify-center" (click)="closeModal()">
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-    <!-- Modal -->
-    <div class="relative w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl" (click)="$event.stopPropagation()">
-      <!-- Header -->
-      <div class="mb-4">
-        <h2 class="text-xl font-semibold text-[var(--foreground)]">Create User</h2>
-        <p class="text-sm text-[var(--muted-foreground)]">Add a new user account.</p>
-      </div>
+  <!-- Modal -->
+  <div
+    class="relative w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="mb-4">
+      <h2 class="text-xl font-semibold text-[var(--foreground)]">Create User</h2>
+      <p class="text-sm text-[var(--muted-foreground)]">Add a new user account.</p>
+    </div>
 
-      <form (submit)="onSubmit()" class="space-y-4">
-        <!-- Username -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Username</label>
-          <div class="relative">
-            <input
-              class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-              type="text"
-              name="username"
-              #usernameField="ngModel"
-              required
-              minlength="3"
-              [(ngModel)]="newUser.username"
-              (input)="checkUsername()"
-              placeholder="Example"
-              [class.border-red-500]="(usernameField.invalid && usernameField.touched) || usernameError"
-            />
-            @if (isCheckingUsername) {
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]">
-              <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="10" stroke-opacity="0.25" stroke-width="4"></circle>
-                <path d="M22 12a10 10 0 0 1-10 10" stroke-width="4" stroke-linecap="round"></path>
-              </svg>
-            </span>
-            }
-          </div>
-          @if (usernameError) {
-          <p class="mt-1 text-sm text-[var(--destructive)]">{{ usernameError }}</p>
-          } @else if (usernameField.invalid && usernameField.touched && !isCheckingUsername) {
-          <p class="mt-1 text-sm text-[var(--destructive)]">
-            @if (usernameField.errors?.['required']) { Username is required }
-            @if (usernameField.errors?.['minlength']) { Username must be at least 3 characters long }
-          </p>
-          }
-        </div>
-
-        <!-- Email -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Email</label>
+    <form (submit)="onSubmit()" class="space-y-4">
+      <!-- Username -->
+      <div>
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Username</label>
+        <div class="relative">
           <input
             class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            type="email"
-            name="email"
-            #emailField="ngModel"
-            required
-            [(ngModel)]="newUser.email"
-            placeholder="me@example.com"
-            [class.border-red-500]="emailField.invalid && emailField.touched"
-          />
-          @if (emailField.invalid && emailField.touched) {
-          <p class="mt-1 text-sm text-[var(--destructive)]">
-            @if (emailField.errors?.['required']) { Email is required }
-            @if (emailField.errors?.['email']) { Please enter a valid email address }
-          </p>
-          }
-        </div>
-
-        <!-- Password -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Password</label>
-          <input
-            class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            type="password"
-            name="password"
-            #passwordField="ngModel"
+            type="text"
+            name="username"
+            #usernameField="ngModel"
             required
             minlength="3"
-            [(ngModel)]="newUser.password"
-            placeholder="••••••••"
-            [class.border-red-500]="passwordField.invalid && passwordField.touched"
+            [(ngModel)]="newUser.username"
+            (input)="checkUsername()"
+            placeholder="Example"
+            [class.border-red-500]="
+              (usernameField.invalid && usernameField.touched) || usernameError
+            "
           />
-          @if (passwordField.invalid && passwordField.touched) {
-          <p class="mt-1 text-sm text-[var(--destructive)]">
-            @if (passwordField.errors?.['required']) { Password is required }
-            @if (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
-          </p>
+          @if (isCheckingUsername) {
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]">
+            <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.25" stroke-width="4"></circle>
+              <path d="M22 12a10 10 0 0 1-10 10" stroke-width="4" stroke-linecap="round"></path>
+            </svg>
+          </span>
           }
         </div>
+        @if (usernameError) {
+        <p class="mt-1 text-sm text-[var(--destructive)]">{{ usernameError }}</p>
+        } @else if (usernameField.invalid && usernameField.touched && !isCheckingUsername) {
+        <p class="mt-1 text-sm text-[var(--destructive)]">
+          @if (usernameField.errors?.['required']) { Username is required } @if
+          (usernameField.errors?.['minlength']) { Username must be at least 3 characters long }
+        </p>
+        }
+      </div>
 
-        <!-- Birthdate -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Birthdate (Optional)</label>
-          <input
-            class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            type="date"
-            name="birthdate"
-            [(ngModel)]="newUser.birthdate"
-          />
-        </div>
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Email</label>
+        <input
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          type="email"
+          name="email"
+          #emailField="ngModel"
+          required
+          [(ngModel)]="newUser.email"
+          placeholder="me@example.com"
+          [class.border-red-500]="emailField.invalid && emailField.touched"
+        />
+        @if (emailField.invalid && emailField.touched) {
+        <p class="mt-1 text-sm text-[var(--destructive)]">
+          @if (emailField.errors?.['required']) { Email is required } @if
+          (emailField.errors?.['email']) { Please enter a valid email address }
+        </p>
+        }
+      </div>
 
-        <!-- Age -->
-        <div>
-          <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Age (Optional)</label>
-          <input
-            class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            type="number"
-            name="age"
-            min="0"
-            [(ngModel)]="newUser.age"
-            placeholder="Enter Age"
-          />
-        </div>
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1">Password</label>
+        <input
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          type="password"
+          name="password"
+          #passwordField="ngModel"
+          required
+          minlength="3"
+          [(ngModel)]="newUser.password"
+          placeholder="••••••••"
+          [class.border-red-500]="passwordField.invalid && passwordField.touched"
+        />
+        @if (passwordField.invalid && passwordField.touched) {
+        <p class="mt-1 text-sm text-[var(--destructive)]">
+          @if (passwordField.errors?.['required']) { Password is required } @if
+          (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
+        </p>
+        }
+      </div>
 
-        <!-- Actions -->
-        <div class="pt-2 flex items-center justify-between gap-3">
-          <a
-            (click)="canSubmit() ? null : onSubmit()"
-            role="button"
-            [tabindex]="canSubmit() ? -1 : 0"
-            (keydown.enter)="canSubmit() ? null : onSubmit()"
-            (keydown.space)="canSubmit() ? null : onSubmit()"
-            [class]="
-              'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors ' +
-              (canSubmit()
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
-                : 'bg-[var(--primary)] text-white hover:opacity-90 cursor-pointer')
-            "
-          >
-            Create Account
-          </a>
-        </div>
-      </form>
-    </div>
+      <!-- Birthdate -->
+      <div>
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1"
+          >Birthdate (Optional)</label
+        >
+        <input
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          type="date"
+          name="birthdate"
+          [(ngModel)]="newUser.birthdate"
+        />
+      </div>
+
+      <!-- Age -->
+      <div>
+        <label class="block text-sm font-medium text-[var(--foreground)] mb-1"
+          >Age (Optional)</label
+        >
+        <input
+          class="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          type="number"
+          name="age"
+          min="0"
+          [(ngModel)]="newUser.age"
+          placeholder="Enter Age"
+        />
+      </div>
+
+      <!-- Actions -->
+      <div class="pt-2 flex items-center justify-between gap-3">
+        <a
+          (click)="canSubmit() ? null : onSubmit()"
+          [class]="
+            'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors ' +
+            (canSubmit()
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+              : 'bg-[var(--primary)] text-white hover:opacity-90 cursor-pointer')
+          "
+        >
+          Create Account
+        </a>
+      </div>
+    </form>
   </div>
+</div>
 }

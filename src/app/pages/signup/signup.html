@@ -45,8 +45,8 @@
         <p class="text-red-500 text-sm mt-1">{{ usernameError }}</p>
         } @else if (usernameField.invalid && usernameField.touched) {
         <p class="text-red-500 text-sm mt-1">
-          @if (usernameField.errors?.['required']) { Username is required }
-          @if (usernameField.errors?.['minlength']) { Username must be at least 3 characters long }
+          @if (usernameField.errors?.['required']) { Username is required } @if
+          (usernameField.errors?.['minlength']) { Username must be at least 3 characters long }
         </p>
         }
       </div>
@@ -66,8 +66,8 @@
         />
         @if (emailField.invalid && emailField.touched) {
         <p class="text-red-500 text-sm mt-1">
-          @if (emailField.errors?.['required']) { Email is required }
-          @if (emailField.errors?.['email']) { Please enter a valid email address }
+          @if (emailField.errors?.['required']) { Email is required } @if
+          (emailField.errors?.['email']) { Please enter a valid email address }
         </p>
         }
       </div>
@@ -88,8 +88,8 @@
         />
         @if (passwordField.invalid && passwordField.touched) {
         <p class="text-red-500 text-sm mt-1">
-          @if (passwordField.errors?.['required']) { Password is required }
-          @if (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
+          @if (passwordField.errors?.['required']) { Password is required } @if
+          (passwordField.errors?.['minlength']) { Password must be at least 3 characters long }
         </p>
         }
       </div>
@@ -125,10 +125,6 @@
       <!-- Submit Button -->
       <a
         (click)="canSubmit() ? null : onSubmit()"
-        role="button"
-        [tabindex]="canSubmit() ? -1 : 0"
-        (keydown.enter)="canSubmit() ? null : onSubmit()"
-        (keydown.space)="canSubmit() ? null : onSubmit()"
         [class]="
           'w-full py-3 px-6 mt-2 border-0 rounded-lg text-sm font-medium font-inherit transition-[background-color] duration-200 ease-linear appearance-none outline-none focus:outline-none flex justify-center items-center ' +
           (canSubmit()

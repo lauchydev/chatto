@@ -63,9 +63,15 @@
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
+                  @if (user.id === authService.getCurrentUser()?.id) {
+                  <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
+                    {{ user.username }} (You)
+                  </p>
+                  } @else {
                   <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
                     {{ user.username }}
                   </p>
+                  }
                   <!-- Role badges -->
                   @if (user.roles.includes('superadmin')) {
                   <span
@@ -187,7 +193,8 @@
                   <p class="text-[var(--foreground)] font-medium truncate max-w-[220px]">
                     {{ user.username }}
                   </p>
-                  <span class="px-2 py-0.5 rounded text-xs bg-amber-500/10 text-amber-500"
+                  <span
+                    class="inline-flex items-center rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-500 inset-ring inset-ring-amber-400/20"
                     >Reported</span
                   >
                 </div>

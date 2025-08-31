@@ -4,9 +4,10 @@
     "name": "First Server",
     "icon": "",
     "owner": 2,
-    "members": [2, 3],
-    "admins": [2, 1],
-    "requests": []
+    "members": [2, 3, 4],
+    "admins": [2, 1, 4],
+    "requests": [],
+    "banned": []
   },
   {
     "id": 2,
@@ -15,6 +16,7 @@
     "owner": 1,
     "members": [1],
     "admins": [1],
-    "requests": [3]
+    "requests": [3],
+    "banned": []
   }
 ]

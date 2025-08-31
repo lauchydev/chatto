@@ -8,16 +8,17 @@ import { User } from '../model/user.interface';
 })
 export class UsersService {
   private http = inject(HttpClient);
+  private localurl = 'http://localhost:3000';
 
   // Get a single user by ID
   getUser(userId: number): Observable<User> {
-    return this.http.get<User>(`http://localhost:3000/api/users/${userId}`);
+    return this.http.get<User>(`${this.localurl}/api/users/${userId}`);
   }
 
   // Get multiple users by their ID's
   getUsers(userIds: number[]): Observable<User[]> {
     const users = userIds.join(',');
-    return this.http.get<User[]>(`http://localhost:3000/api/users/?ids=${users}`);
+    return this.http.get<User[]>(`${this.localurl}/api/users/?ids=${users}`);
   }
 
   getCurrentUser(): User | null {
@@ -32,24 +33,28 @@ export class UsersService {
   }
 
   getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`http://localhost:3000/api/users`);
+    return this.http.get<User[]>(`${this.localurl}/api/users`);
   }
 
   updateUser(user: User): Observable<User> {
-    return this.http.put<User>(`http://localhost:3000/api/users/${user.id}`, user);
+    return this.http.put<User>(`${this.localurl}/api/users/${user.id}`, user);
   }
 
   deleteUser(userId: number): Observable<User> {
-    return this.http.delete<User>(`http://localhost:3000/api/users/${userId}`);
+    return this.http.delete<User>(`${this.localurl}/api/users/${userId}`);
   }
 
   checkUsername(username: string): Observable<{ exists: boolean }> {
     return this.http.get<{ exists: boolean }>(
-      `http://localhost:3000/api/users/check-username/${username}`
+      `${this.localurl}/api/users/check-username/${username}`
     );
   }
 
   createUser(user: any): Observable<User> {
-    return this.http.post<User>(`http://localhost:3000/api/users`, user);
+    return this.http.post<User>(`${this.localurl}/api/users`, user);
+  }
+
+  reportUser(userId: number) {
+    return this.http.post<void>(`${this.localurl}/api/users/${userId}/report`, {});
   }
 }
