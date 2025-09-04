@@ -6,9 +6,7 @@
     "birthdate": "2001-01-05",
     "image": "https://imgcdn.stablediffusionweb.com/2024/4/7/76683d35-d0e9-4bf4-a630-99a6cc7da8c2.jpg",
     "age": 20,
-    "roles": [
-      "superadmin"
-    ],
+    "roles": ["superadmin"],
     "password": "123",
     "valid": false,
     "banned": false,
@@ -21,9 +19,7 @@
     "image": "https://imgcdn.stablediffusionweb.com/2024/4/21/ef5c1523-2585-4e05-8a46-76391f68f5c9.jpg",
     "birthdate": "2003-04-13",
     "age": 20,
-    "roles": [
-      "groupadmin"
-    ],
+    "roles": ["groupadmin"],
     "password": "groupadmin",
     "valid": false,
     "banned": false,
@@ -36,9 +32,7 @@
     "image": "https://imgcdn.stablediffusionweb.com/2024/3/31/a07c234b-ab97-4ad4-96b1-e1e88ec45e45.jpg",
     "birthdate": "2005-05-02",
     "age": 20,
-    "roles": [
-      "user"
-    ],
+    "roles": ["user"],
     "password": "user",
     "valid": false,
     "banned": false,
@@ -52,9 +46,7 @@
     "password": "user",
     "birthdate": "",
     "age": null,
-    "roles": [
-      "user"
-    ],
+    "roles": ["user"],
     "valid": true,
     "banned": false,
     "reported": false
@@ -67,9 +59,7 @@
     "password": "user",
     "birthdate": "",
     "age": 30,
-    "roles": [
-      "user"
-    ],
+    "roles": ["user"],
     "valid": true,
     "banned": true,
     "reported": false
@@ -82,9 +72,7 @@
     "password": "user",
     "birthdate": "",
     "age": 27,
-    "roles": [
-      "user"
-    ],
+    "roles": ["user"],
     "valid": true,
     "banned": false,
     "reported": true
