@@ -15,21 +15,26 @@
       </div>
     </div>
 
-    <!-- Messages area (placeholder) -->
-    <div class="flex-1 p-4 overflow-y-auto">
-      @if (messages.length == 0) {
+    <!-- Messages area -->
+    <div class="flex-1 p-4 overflow-y-auto flex flex-col">
+      @if (messagein().length == 0) {
       <div class="h-full flex items-center justify-center">
         <p class="text-[var(--muted-foreground)]">
           No messages in <b>#{{ channelsService.getSelectedChannel()?.name }}</b> yet.
         </p>
       </div>
       } @else {
-      <div>
-        <p>DISPLAY MESSAGES HERE</p>
-        <h3>Messages</h3>
-        <ul>
+      <div class="min-h-full flex flex-col">
+        <div class="grow"></div>
+        <ul class="space-y-2">
           @for (message of messagein(); track $index) {
-          <li>{{ messages }}</li>
+          <li class="group">
+            <div
+              class="max-w-[100%] bg-[var(--accent)] text-[var(--accent-foreground)] rounded-lg px-3 py-2 shadow-sm"
+            >
+              <p>{{ message }}</p>
+            </div>
+          </li>
           }
         </ul>
       </div>
@@ -38,16 +43,21 @@
 
     <!-- Message input at bottom -->
     <div
-      class="h-14 flex items-center gap-2 px-4 border-t border-[var(--border)] bg-[var(--chat-bg)]"
+      class="h-16 flex items-center gap-2 px-4 border-t border-[var(--border)] bg-[var(--chat-bg)]"
     >
       <input
         type="text"
+        [ngModel]="messageout()"
+        (ngModelChange)="messageout.set($event)"
         name="messageout"
         id="messageout"
-        placeholder="Type a message..."
-        class="flex-1 bg-transparent text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] outline-none"
+        placeholder="Message #{{ channelsService.getSelectedChannel()?.name }}"
+        class="flex-1 bg-[var(--input)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] outline rounded-md px-3 py-2"
       />
-      <a role="button" class="px-3 py-2 rounded-md bg-[var(--primary)] text-white cursor-pointer"
+      <a
+        role="button"
+        class="px-3 py-2 rounded-md bg-[var(--primary)] text-white cursor-pointer"
+        (click)="send()"
         >Send</a
       >
     </div>

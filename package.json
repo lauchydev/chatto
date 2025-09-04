@@ -28,7 +28,6 @@
     "@angular/forms": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
-    "dotenv": "^17.2.2",
     "lucide-angular": "^0.542.0",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.1",

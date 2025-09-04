@@ -31,7 +31,7 @@ io.on('connection', (socket) => {
   });
   /* Disconnect */
   socket.on('disconnect', () => {
-    io.emit('disconnect');
+    io.emit('user-disconnected', socket.id);
   });
 });
 
