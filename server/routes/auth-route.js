@@ -1,40 +1,48 @@
 const express = require('express');
 const router = express.Router();
-
-const User = require('../data/users/user.js');
-const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
+const { getDB } = require('../db');
 
 router.post('', async (req, res) => {
   if (!req.body) {
     return res.fail(400, 'Request body required');
   }
 
-  let user = new User();
+  const { email, password } = req.body;
 
-  for (let i = 0; i < users.length; i++) {
-    if (
-      (req.body.email == users[i].email || req.body.email == users[i].username) &&
-      req.body.password == users[i].password
-    ) {
-      if (users[i].banned === true) {
-        return res.success({ valid: false, banned: true });
-      }
-      user.id = users[i].id;
-      user.username = users[i].username;
-      user.email = users[i].email;
-      user.image = users[i].image;
-      user.birthdate = users[i].birthdate;
-      user.age = users[i].age;
-      user.roles = users[i].roles;
-      user.banned = users[i].banned === true;
-      user.reported = users[i].reported;
-      user.valid = true;
-    }
+  if (!email || !password) {
+    return res.fail(400, 'Email and password required');
   }
-  if (user.valid) {
-    return res.success(user);
-  } else {
-    return res.success({ valid: false });
+
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+
+    // Find user by email or username
+    const user = await usersColl.findOne({
+      $and: [
+        { $or: [{ email: email }, { username: email }] },
+        { password: password }
+      ]
+    });
+
+    if (!user) {
+      return res.success({ valid: false });
+    }
+
+    // Check if user is banned
+    if (user.banned === true) {
+      return res.success({ valid: false, banned: true });
+    }
+
+    // Return user data (excluding password for security)
+    const { password: _, ...userResponse } = user;
+    userResponse.valid = true;
+
+    console.log(`AUTH | User '${user.username}' logged in successfully`);
+    return res.success(userResponse);
+  } catch (error) {
+    console.error('Error during authentication:', error);
+    return res.fail(500, 'Authentication failed');
   }
 });
 
