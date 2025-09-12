@@ -1,12 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 const { getDB } = require('../db');
-
-const Group = require('../data/groups/group.js');
-let groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
-const groupsPath = path.join(__dirname, '../data/groups/groups.json');
 
 /**
  *
@@ -44,7 +38,7 @@ router.get('/', async (req, res) => {
     }
 
     const filteredGroups = await groupsColl.find(filter).toArray();
-    console.log('Loaded groups successfully');
+    console.log(`SERVER | Loaded ${filteredGroups.length} groups`);
     return res.success(filteredGroups);
   } catch (error) {
     console.error('Error loading groups from MongoDB: ', error);
@@ -71,6 +65,7 @@ router.get('/discover', async (req, res) => {
     };
 
     const availGroups = await groupsColl.find(filter).toArray();
+    console.log(`DISCOVER | Loaded ${availGroups.length} groups`);
     return res.success(availGroups);
   } catch (error) {
     console.error('Error loading discoverable groups: ', error);
