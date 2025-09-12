@@ -14,6 +14,7 @@ yarn-error.log
 .env
 
 # IDEs and editors
+.env
 .idea/
 .project
 .classpath
