@@ -1,60 +1,94 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
-
-const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
-const groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
+const { getDB } = require('../db.js');
 
 // GET /api/users/1
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   const userId = Number(req.params.id);
-  const user = users.find((user) => user.id === userId);
-  return user ? res.success(user) : res.fail(404, 'User not found');
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+
+    const user = await usersColl.findOne({ id: userId });
+    return user ? res.success(user) : res.fail(404, 'User not found');
+  } catch (error) {
+    console.error('Failed to get user from id: ', userId);
+    return res.fail(500, 'Failed to fetch user');
+  }
 });
 
 // GET /api/users
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { ids } = req.query;
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
 
-  if (ids) {
-    // GET /api/users?ids=1,2,3
-    const userIds = ids.split(',').map((id) => Number(id));
-    const filteredUsers = users.filter((user) => userIds.includes(user.id));
-    return res.success(filteredUsers);
+    if (ids) {
+      // GET /api/users?ids=1,2,3
+      const userIds = ids.split(',').map((id) => Number(id));
+      const filteredUsers = await usersColl.find({ id: { $in: userIds } }).toArray();
+      return res.success(filteredUsers);
+    }
+    // GET /api/users
+    const allUsers = await usersColl.find({}).toArray();
+    console.log(`USERS  | Loaded ${allUsers.length} users`);
+    return res.success(allUsers);
+  } catch (error) {
+    console.error('Error fetching users: ', error);
+    return res.fail(500, 'Failed to fetch users');
   }
-  // GET /api/users
-  return res.success(users);
 });
 
 // GET /api/users/check-username/:username
-router.get('/check-username/:username', (req, res) => {
+router.get('/check-username/:username', async (req, res) => {
   const username = req.params.username.toLowerCase().trim();
+  if (!username) return res.fail(400, 'Username is required');
 
-  if (!username) {
-    return res.fail(400, 'Username is required');
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+
+    const existingUser = await usersColl.findOne({ username: username });
+    return res.success({ exists: !!existingUser });
+  } catch (error) {
+    console.error('Error checking username: ', error);
+    res.fail(500, 'Failed to check username');
   }
-  const existingUser = users.find((user) => user.username.toLowerCase() === username);
-  return res.success({ exists: !!existingUser });
 });
 
 // PUT /api/users/:id
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const userId = Number(req.params.id);
-  const userIndex = users.findIndex((user) => user.id === userId);
 
-  if (userIndex === -1) {
-    return res.fail(404, 'User not found');
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+
+    // Check if user exists
+    const existingUser = await usersColl.findOne({ id: userId });
+    if (!existingUser) return res.fail(404, 'User not found');
+
+    // Update the user in MongoDB
+    const updateResult = await usersColl.updateOne({ id: userId }, { $set: req.body });
+
+    if (updateResult.modifiedCount === 0) return res.fail(400, 'No changes made');
+
+    // Get the updated user
+    const updatedUser = await usersColl.findOne({ id: userId });
+    return res.success(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return res.fail(500, 'Failed to update user');
   }
-  users[userIndex] = { ...users[userIndex], ...req.body };
-  const usersPath = path.join(__dirname, '../data/users/users.json');
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-  return res.success(users[userIndex]);
 });
 
 // POST /api/users (Create new user)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+
     const { username, email, image, password, birthdate, age, roles } = req.body;
 
     // Validation
@@ -63,16 +97,17 @@ router.post('/', (req, res) => {
     }
 
     // Check if username already exists
-    const existingUser = users.find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
-    );
-
-    if (existingUser) {
-      return res.fail(400, 'Username already exists');
-    }
+    const existingUser = await usersColl.findOne({ username: username.toLowerCase() });
+    if (existingUser) return res.fail(400, 'Username already exists');
 
     // Generate new ID
-    const newId = Math.max(...users.map((u) => u.id), 0) + 1;
+    const last = await usersColl
+      .find({}, { projection: { id: 1 } })
+      .sort({ id: -1 })
+      .limit(1)
+      .toArray();
+
+    const newId = (last[0]?.id || 0) + 1;
 
     // Create new user
     const newUser = {
@@ -90,14 +125,10 @@ router.post('/', (req, res) => {
     };
 
     // Add to users array
-    users.push(newUser);
-
-    // Save to file
-    const usersPath = path.join(__dirname, '../data/users/users.json');
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
+    await usersColl.insertOne(newUser);
     // Return user without password
     const { password: _, ...userResponse } = newUser;
+    console.log(`USER  | User created successfully, ID: ${newUser.id}`);
     return res.created(userResponse);
   } catch (error) {
     console.error('Error creating user:', error);
@@ -105,59 +136,61 @@ router.post('/', (req, res) => {
   }
 });
 
-router.post('/:id/report', (req, res) => {
+router.post('/:id/report', async (req, res) => {
   const userId = Number(req.params.id);
-  const userIndex = users.findIndex((u) => u.id === userId);
-  if (userIndex === -1) return res.fail(404, 'User not found');
 
-  users[userIndex].reported = true;
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
 
-  const usersPath = path.join(__dirname, '../data/users/users.json');
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    const existingUser = await usersColl.findOne({ id: userId });
+    if (!existingUser) return res.fail(404, 'User not found');
 
-  return res.success({ ok: true });
+    const updateResult = await usersColl.updateOne({ id: userId }, { $set: { reported: true } });
+
+    if (updateResult.modifiedCount === 0) return res.fail(400, 'No changes made');
+    return res.success({ ok: true });
+  } catch (error) {
+    console.error('Error updating user report: ', error);
+    return res.fail(500, 'Failed to set report');
+  }
 });
 
 // DELETE /api/users/:id
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   const userId = Number(req.params.id);
-  const userIndex = users.findIndex((user) => user.id === userId);
 
-  if (userIndex === -1) {
-    return res.fail(404, 'User not found');
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+    const groupsColl = db.collection('groups');
+
+    const existingUser = await usersColl.findOne({ id: userId });
+    if (!existingUser) return res.fail(404, 'User not found');
+
+    // 1. Remove user from users collection
+    await usersColl.deleteOne({ id: userId });
+
+    // 2. Remove user from all groups (members and admins)
+    await groupsColl.updateMany(
+      {},
+      {
+        $pull: {
+          members: userId,
+          admins: userId,
+        },
+      }
+    );
+
+    // 3. Delete groups owned by this user
+    await groupsColl.deleteMany({ owner: userId });
+
+    console.log(`USER | User ID ${userId} deleted successfully`);
+    return res.success({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.fail(500, 'Failed to delete user');
   }
-
-  // 1. Remove user from users array
-  users.splice(userIndex, 1);
-
-  // 2. Remove user from all groups (members, admins, and handle ownership)
-  const groupsPath = path.join(__dirname, '../data/groups/groups.json');
-  let groupsToDelete = [];
-
-  groups.forEach((group, index) => {
-    // Remove from members array
-    group.members = group.members.filter((memberId) => memberId !== userId);
-
-    // Remove from admins array
-    if (group.admins) {
-      group.admins = group.admins.filter((adminId) => adminId !== userId);
-    }
-
-    if (group.owner === userId) {
-      groupsToDelete.push(index);
-    }
-  });
-
-  groupsToDelete.reverse().forEach((index) => {
-    groups.splice(index, 1);
-  });
-
-  // 3. Save both files
-  const usersPath = path.join(__dirname, '../data/users/users.json');
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-
-  return res.success({ message: 'User deleted successfully' });
 });
 
 module.exports = router;
