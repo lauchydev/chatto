@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const http = require('http');
 const { Server } = require('socket.io');
 const app = express();
 const PORT = 3000;
+const { connectDB, health } = require('./db');
 
 app.use(cors());
 app.use(express.json());
@@ -34,6 +34,18 @@ io.on('connection', (socket) => {
     io.emit('user-disconnected', socket.id);
   });
 });
+
+/* Init Database */
+(async () => {
+  try {
+    await connectDB();
+    await health();
+    console.log('MongoDB connected');
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+  }
+})();
 
 app.use('/api/auth', require('./routes/auth-route'));
 app.use('/api/groups', require('./routes/groups-route'));
