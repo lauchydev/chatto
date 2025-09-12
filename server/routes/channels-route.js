@@ -8,7 +8,7 @@ const { getDB } = require('../db');
  * Get Channels
  */
 router.get('/', async (req, res) => {
-  const groupId = parseInt(req.query.groupId, 10);
+  const groupId = Number(req.query.groupId, 10);
   if (!Number.isInteger(groupId)) {
     return res.fail(400, 'Group ID is required');
   }
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   let name = (req.body.name || '').trim();
   name = name.replace(' ', '-');
-  const groupId = parseInt(req.body.groupId, 10);
+  const groupId = Number(req.body.groupId, 10);
 
   if (!name) {
     return res.fail(400, 'Name is invalid');
@@ -80,8 +80,8 @@ router.post('/', async (req, res) => {
  * Delete Channel
  */
 router.delete('/:id', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const userId = parseInt(req.query.userId, 10); // pass from frontend
+  const id = Number(req.params.id, 10);
+  const userId = Number(req.query.userId, 10); // pass from frontend
 
   if (!Number.isInteger(id)) {
     return res.fail(400, 'Channel ID is invalid');

@@ -8,7 +8,7 @@ const groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/gr
 
 // GET /api/users/1
 router.get('/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
+  const userId = Number(req.params.id);
   const user = users.find((user) => user.id === userId);
   return user ? res.success(user) : res.fail(404, 'User not found');
 });
@@ -19,7 +19,7 @@ router.get('/', (req, res) => {
 
   if (ids) {
     // GET /api/users?ids=1,2,3
-    const userIds = ids.split(',').map((id) => parseInt(id));
+    const userIds = ids.split(',').map((id) => Number(id));
     const filteredUsers = users.filter((user) => userIds.includes(user.id));
     return res.success(filteredUsers);
   }
@@ -40,7 +40,7 @@ router.get('/check-username/:username', (req, res) => {
 
 // PUT /api/users/:id
 router.put('/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
+  const userId = Number(req.params.id);
   const userIndex = users.findIndex((user) => user.id === userId);
 
   if (userIndex === -1) {
@@ -106,7 +106,7 @@ router.post('/', (req, res) => {
 });
 
 router.post('/:id/report', (req, res) => {
-  const userId = parseInt(req.params.id);
+  const userId = Number(req.params.id);
   const userIndex = users.findIndex((u) => u.id === userId);
   if (userIndex === -1) return res.fail(404, 'User not found');
 
@@ -120,7 +120,7 @@ router.post('/:id/report', (req, res) => {
 
 // DELETE /api/users/:id
 router.delete('/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
+  const userId = Number(req.params.id);
   const userIndex = users.findIndex((user) => user.id === userId);
 
   if (userIndex === -1) {
