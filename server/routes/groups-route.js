@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const { getDB } = require('../db');
 
 const Group = require('../data/groups/group.js');
-const e = require('express');
 let groups = JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
 const groupsPath = path.join(__dirname, '../data/groups/groups.json');
 
@@ -18,51 +18,59 @@ const groupsPath = path.join(__dirname, '../data/groups/groups.json');
  *  Get global group lists
  */
 router.get('/', async (req, res) => {
-  const userId = parseInt(req.query.userId);
+  const userId = Number(req.query.userId);
 
-  if (!userId) {
+  if (!Number.isInteger(userId)) {
     return res.fail(400, 'User ID Required');
   }
 
-  const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
+  try {
+    const db = getDB();
+    const usersColl = db.collection('users');
+    const groupsColl = db.collection('groups');
 
-  const user = users.find((u) => u.id === userId);
-  if (!user) {
-    return res.fail(404, 'User not found');
+    const user = await usersColl.findOne({ id: userId });
+    if (!user) {
+      return res.fail(404, 'User not found');
+    }
+
+    let filter = {};
+    if (Array.isArray(user.roles) && user.roles.includes('superadmin')) {
+      filter = {};
+    } else if (Array.isArray(user.roles) && user.roles.includes('groupadmin')) {
+      filter = { $or: [{ owner: user.id }, { admins: userId }, { members: userId }] };
+    } else {
+      filter = { members: userId };
+    }
+
+    const filteredGroups = await groupsColl.find(filter).toArray();
+    console.log('Loaded groups successfully');
+    return res.success(filteredGroups);
+  } catch (error) {
+    console.error('Error loading groups from MongoDB: ', error);
+    return res.fail(500, 'Failed to load groups');
   }
-
-  let filteredGroups;
-
-  if (user.roles.includes('superadmin')) {
-    // Access to all  groups
-    filteredGroups = groups;
-  } else if (user.roles.includes('groupadmin')) {
-    // Access to groups where admin/owner/member
-    filteredGroups = groups.filter(
-      (group) =>
-        group.owner === user.id || group.admins.includes(userId) || group.members.includes(userId)
-    );
-  } else {
-    // Access to groups where member
-    filteredGroups = groups.filter((group) => group.members.includes(userId));
-  }
-
-  return res.success(filteredGroups);
 });
 
 /**
  *  Get list of servers able to request to join
  */
-router.get('/discover', (req, res) => {
-  const userId = parseInt(req.query.userId);
+router.get('/discover', async (req, res) => {
+  const userId = Number(req.query.userId);
   /* Validate User ID */
-  if (!userId) return res.fail(400, 'User ID Required');
+  if (!Number.isInteger(userId)) return res.fail(400, 'User ID Required');
 
-  /* Get list of groups user is not a member of */
+  /* Get list of groups user is not a member of and not banned from */
   try {
-    const availGroups = groups.filter(
-      (g) => !g.members.includes(userId) && !(g.banned || []).includes(userId)
-    );
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const filter = {
+      members: { $nin: [userId] },
+      banned: { $nin: [userId] },
+    };
+
+    const availGroups = await groupsColl.find(filter).toArray();
     return res.success(availGroups);
   } catch (error) {
     console.error('Error loading discoverable groups: ', error);
@@ -79,8 +87,12 @@ router.get('/discover', (req, res) => {
 /**
  * Create a group
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+    const usersColl = db.collection('users');
+
     const { name, id, image } = req.body;
 
     if (!name || !name.trim()) {
@@ -95,12 +107,25 @@ router.post('/', (req, res) => {
       return res.fail(400, 'Group owner ID is not valid');
     }
 
-    const users = JSON.parse(
-      require('../read-json.js').readJsonAsString('./data/users/users.json')
-    );
-    const superAdminIds = users.filter((u) => u.roles.includes('superadmin')).map((u) => u.id);
+    /* Find all users with super admin role and only return id (1 = true | 0 = false) */
+    const superAdmins = await usersColl
+      .find({ roles: 'superadmin' }, { projection: { id: 1 } })
+      .toArray();
 
-    const newId = Math.max(...groups.map((g) => g.id), 0) + 1;
+    const superAdminIds = superAdmins.map((u) => u.id);
+
+    /**
+     *  Get last group ID by:
+     *  Get list of group ID's -> sort it from last to first -> limit to 1 group
+     */
+    const last = await groupsColl
+      .find({}, { projection: { id: 1 } })
+      .sort({ id: -1 })
+      .limit(1)
+      .toArray();
+
+    const newId = (last[0]?.id || 0) + 1;
+
     const newGroup = {
       id: newId,
       name: name.trim(),
@@ -113,9 +138,7 @@ router.post('/', (req, res) => {
       banned: [],
     };
 
-    groups.push(newGroup);
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-
+    await groupsColl.insertOne(newGroup);
     return res.created(newGroup);
   } catch (error) {
     console.error('Error creating group: ', error);
@@ -126,36 +149,51 @@ router.post('/', (req, res) => {
 /**
  * Update a group
  */
-router.put('/:id', (req, res) => {
-  const groupId = parseInt(req.params.id);
+router.put('/:id', async (req, res) => {
+  const groupId = Number(req.params.id);
   if (!Number.isInteger(groupId)) {
     return res.fail(400, 'Invalid group ID');
   }
-
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) {
-    return res.fail(404, 'Group not found');
-  }
-
-  const { name, image, icon } = req.body || {};
-  if (name !== undefined) {
-    const trimmed = String(name).trim();
-    if (!trimmed) {
-      return res.fail(400, 'Group name is required');
-    }
-    group.name = trimmed;
-  }
-
-  if (image !== undefined) {
-    group.icon = image;
-  }
-  if (icon !== undefined) {
-    group.icon = icon;
-  }
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-    return res.success(group);
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const group = await groupsColl.findOne({ id: groupId });
+
+    if (!group) {
+      return res.fail(404, 'Group not found');
+    }
+
+    const { name, icon } = req.body || {};
+    const update = {};
+
+    if (name !== undefined) {
+      const trimmed = String(name).trim();
+      if (!trimmed) {
+        return res.fail(400, 'Group name is required');
+      }
+      update.name = trimmed;
+    }
+
+    if (icon !== undefined) {
+      update.icon = icon;
+    }
+
+    /* Check if there arent any updated to process and return */
+    if (Object.keys(update).length === 0) {
+      return res.success(group);
+    }
+
+    /* Process the updates */
+    const result = await groupsColl.findOneAndUpdate(
+      { id: groupId },
+      /* Name and Icon are the only modifiable fields (At the moment) */
+      { $set: { name: update.name, icon: update.icon } },
+      /* Return after so the updated group is visible immediately */
+      { returnDocument: 'after' }
+    );
+
+    return res.success(result.value);
   } catch (error) {
     console.error('Error updating group: ', error);
     return res.fail(500, 'Failed to update group');
@@ -165,8 +203,8 @@ router.put('/:id', (req, res) => {
 /**
  *  Add user to groups join requests
  */
-router.post('/:groupId/requests', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
+router.post('/:groupId/requests', async (req, res) => {
+  const groupId = Number(req.params.groupId);
   const { userId } = req.body;
   const uid = Number(userId);
 
@@ -174,26 +212,19 @@ router.post('/:groupId/requests', (req, res) => {
   if (!Number.isInteger(uid) || !Number.isInteger(groupId)) {
     return res.fail(400, 'Invalid group or user ID');
   }
-
-  /* Get the group being requested */
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) {
-    return res.fail(404, 'Group not found');
-  }
-
-  group.banned = Array.isArray(group.banned) ? group.banned : [];
-  if (group.banned.includes(uid)) {
-    return res.fail(403, 'User is banned from this group');
-  }
-
-  /* Add user to group join requests list */
-  group.requests = Array.isArray(group.requests) ? group.requests : [];
-  if (!group.requests.includes(uid)) {
-    group.requests.push(uid);
-  }
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    /* Get the group being requested */
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+    if (group.banned.includes(uid)) return res.fail(403, 'User is banned from this group');
+    if (group.members.includes(uid)) return res.fail(400, 'User is already a member');
+
+    /* Add user to group join requests list */
+    await groupsColl.updateOne({ id: groupId }, { $addToSet: { requests: uid } });
+
     return res.created({ ok: true });
   } catch (error) {
     console.error('Error saving join request: ', error);
@@ -204,23 +235,34 @@ router.post('/:groupId/requests', (req, res) => {
 /**
  *  Approve a users group join request
  */
-router.post('/:groupId/requests/:userId/approve', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  const userId = parseInt(req.params.userId);
+router.post('/:groupId/requests/:userId/approve', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  const userId = Number(req.params.userId);
   if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
     return res.fail(400, 'Invalid group or user ID');
   }
-
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group not found');
-
-  group.requests = Array.isArray(group.requests) ? group.requests : [];
-  group.members = Array.isArray(group.members) ? group.members : [];
-  group.requests = group.requests.filter((id) => id !== userId);
-  if (!group.members.includes(userId)) group.members.push(userId);
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+    if (group.banned.includes(userId)) {
+      return res.fail(403, 'User is banned from this group');
+    }
+
+    /* Add user to group and remove request from list */
+    const result = await groupsColl.findOneAndUpdate(
+      { id: groupId, requests: userId },
+      /* Pull user request from list, add user to members list */
+      { $pull: { requests: userId }, $addToSet: { members: userId } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return res.fail(400, 'No pending request for this user');
+    }
+
     return res.success({ ok: true });
   } catch (error) {
     console.error('Error approving join request: ', error);
@@ -231,29 +273,32 @@ router.post('/:groupId/requests/:userId/approve', (req, res) => {
 /**
  *  Ban a user from a group
  */
-router.post('/:groupId/ban/:userId', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  const userId = parseInt(req.params.userId);
+router.post('/:groupId/ban/:userId', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  const userId = Number(req.params.userId);
 
   if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
     return res.fail(400, 'Invalid group or user ID');
   }
-
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group not found');
-
-  if (group.owner === userId) {
-    return res.fail(400, 'Cannot ban the group owner');
-  }
-
-  group.members = (group.members || []).filter((m) => m !== userId);
-  group.admins = (group.admins || []).filter((a) => a !== userId);
-  group.requests = (group.requests || []).filter((r) => r !== userId);
-  group.banned = Array.isArray(group.banned) ? group.banned : [];
-  if (!group.banned.includes(userId)) group.banned.push(userId);
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+    if (group.owner === userId) return res.fail(400, 'Cannot ban the group owner');
+
+    const result = await groupsColl.findOneAndUpdate(
+      { id: groupId, banned: { $ne: userId } },
+      {
+        $pull: { requests: userId, members: userId, admins: userId },
+        $addToSet: { banned: userId },
+      },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) return res.fail(400, 'User already banned');
+
     return res.success({ ok: true });
   } catch (error) {
     console.error('Error banning user: ', error);
@@ -270,63 +315,96 @@ router.post('/:groupId/ban/:userId', (req, res) => {
 /**
  *  Remove a user from a single group
  */
-router.delete('/:groupId/users/:userId', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  const userId = parseInt(req.params.userId);
+router.delete('/:groupId/users/:userId', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  const userId = Number(req.params.userId);
 
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group not found');
-
-  if (group.owner === userId) {
-    return res.status(400).json({ error: 'Cannot remove the group owner' });
+  if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
+    return res.fail(400, 'Invalid group or user ID');
   }
 
-  group.members = (group.members || []).filter((m) => m !== userId);
-  group.admins = (group.admins || []).filter((a) => a !== userId);
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
 
-  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-  return res.success({ message: 'User removed from group' });
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+
+    if (group.owner === userId) {
+      return res.fail(400, 'Cannot remove the group owner');
+    }
+
+    await groupsColl.updateOne({ id: groupId }, { $pull: { members: userId, admins: userId } });
+
+    return res.success({ message: 'User removed from group' });
+  } catch (error) {
+    console.error('Error removing user from group: ', error);
+    return res.fail(500, 'Failed to remove user from group');
+  }
 });
 
 /**
  *  Remove a user from all groups (User Deleted)
  */
-router.delete('/:userId', (req, res) => {
-  const userId = parseInt(req.params.userId);
-  groups.forEach((group) => {
-    group.members = group.members.filter((m) => m !== userId);
-  });
-  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-  return res.success({ message: 'User removed from all groups' });
+router.delete('/:userId', async (req, res) => {
+  const userId = Number(req.params.userId);
+  if (!Number.isInteger(userId)) return res.fail(400, 'Invalid user ID');
+
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+    await groupsColl.updateMany(
+      {},
+      { $pull: { members: userId, admins: userId, requests: userId } }
+    );
+
+    return res.success({ message: 'User removed from all groups' });
+  } catch (error) {
+    console.error('Error deleting user: ', error);
+    return res.fail(500, 'Failed to remove user from groups');
+  }
 });
 
 /**
  * Delete a group
  */
-router.delete('/delete/:groupId', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  groups = groups.filter((g) => g.id !== groupId);
-  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-  return res.success({ message: 'Group deleted' });
+router.delete('/delete/:groupId', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    await groupsColl.deleteOne({ id: groupId });
+    return res.success({ message: 'Group deleted' });
+  } catch (error) {
+    console.error('Error deleting group: ', error);
+    return res.fail(500, 'Failed to delete group');
+  }
 });
 
 /**
  *  Reject a group join request
  */
-router.delete('/:groupId/requests/:userId', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  const userId = parseInt(req.params.userId);
+router.delete('/:groupId/requests/:userId', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  const userId = Number(req.params.userId);
   if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
     return res.fail(400, 'Invalid group or user ID');
   }
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group not found');
-
-  group.requests = Array.isArray(group.requests) ? group.requests : [];
-  group.requests = group.requests.filter((id) => id !== userId);
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+
+    const result = await groupsColl.updateOne(
+      { id: groupId, requests: userId },
+      { $pull: { requests: userId } }
+    );
+
+    if (result.matchedCount === 0) return res.fail(400, 'User has no join request');
+
     return res.success({ ok: true });
   } catch (error) {
     console.error('Error rejecting join request: ', error);
@@ -337,22 +415,27 @@ router.delete('/:groupId/requests/:userId', (req, res) => {
 /**
  *  Unban a user from a group
  */
-router.delete('/:groupId/ban/:userId', (req, res) => {
-  const groupId = parseInt(req.params.groupId);
-  const userId = parseInt(req.params.userId);
+router.delete('/:groupId/ban/:userId', async (req, res) => {
+  const groupId = Number(req.params.groupId);
+  const userId = Number(req.params.userId);
 
   if (!Number.isInteger(groupId) || !Number.isInteger(userId)) {
     return res.fail(400, 'Invalid group or user ID');
   }
 
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group not found');
-
-  group.banned = Array.isArray(group.banned) ? group.banned : [];
-  group.banned = group.banned.filter((id) => id !== userId);
-
   try {
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group not found');
+
+    const result = await groupsColl.updateOne(
+      { id: groupId, banned: userId },
+      { $pull: { banned: userId } }
+    );
+
+    if (result.matchedCount === 0) return res.fail(400, 'User is not banned');
     return res.success({ ok: true });
   } catch (error) {
     console.error('Error unbanning user: ', error);

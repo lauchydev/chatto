@@ -126,6 +126,10 @@ export class UserList {
     this.showUserDropdownId = null;
   }
 
+  isUserBanned(userId: number): boolean {
+    return this.bannedUsers.some((user) => user.id === userId);
+  }
+
   onReportUser(user: User): void {
     this.closeUserDropdown();
     this.usersService.reportUser(user.id).subscribe({
@@ -167,17 +171,28 @@ export class UserList {
 
     const prevAdmins = this.groupAdminUsers;
     const prevMembers = this.memberUsers;
+    const prevBanned = this.bannedUsers;
 
     this.groupAdminUsers = this.groupAdminUsers.filter((u) => u.id !== user.id);
     this.memberUsers = this.memberUsers.filter((u) => u.id !== user.id);
+    this.bannedUsers = [...this.bannedUsers, user];
 
     this.groupsService.banUser(groupId, user.id).subscribe({
       next: () => this.groupsService.refreshGroups(),
       error: (err) => {
         console.error('Ban failed: ', err);
-        this.error = 'Failed to ban user';
-        this.groupAdminUsers = prevAdmins;
-        this.memberUsers = prevMembers;
+        // Check if user is already banned
+        if (err.error?.error === 'User already banned') {
+          this.error = 'User is already banned';
+          // Don't rollback state since user is actually banned
+          this.groupsService.refreshGroups();
+        } else {
+          this.error = 'Failed to ban user';
+          // Rollback optimistic updates
+          this.groupAdminUsers = prevAdmins;
+          this.memberUsers = prevMembers;
+          this.bannedUsers = prevBanned;
+        }
       },
     });
   }
