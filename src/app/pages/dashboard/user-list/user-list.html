@@ -126,6 +126,7 @@
                 >
                   Kick User
                 </a>
+                @if (!isUserBanned(user.id)) {
                 <a
                   role="menuitem"
                   class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
@@ -133,6 +134,7 @@
                 >
                   Ban User
                 </a>
+                }
               </div>
               }
             </div>
@@ -209,6 +211,7 @@
                 >
                   Kick User
                 </a>
+                @if (!isUserBanned(user.id)) {
                 <a
                   role="menuitem"
                   class="flex items-center w-full px-3 py-2 text-left text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 cursor-pointer"
@@ -216,6 +219,7 @@
                 >
                   Ban User
                 </a>
+                }
               </div>
               }
             </div>

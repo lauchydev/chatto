@@ -1,44 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
-
-const channelsPath = path.join(__dirname, '../data/channels/channels.json');
-const groupsPath = path.join(__dirname, '../data/groups/groups.json');
-
-const loadChannels = () =>
-  JSON.parse(require('../read-json.js').readJsonAsString('./data/channels/channels.json'));
-
-const loadGroups = () =>
-  JSON.parse(require('../read-json.js').readJsonAsString('./data/groups/groups.json'));
+const { getDB } = require('../db');
 
 /* Routes */
 
 /**
  * Get Channels
  */
-router.get('/', (req, res) => {
-  const groupId = parseInt(req.query.groupId, 10);
+router.get('/', async (req, res) => {
+  const groupId = Number(req.query.groupId, 10);
   if (!Number.isInteger(groupId)) {
     return res.fail(400, 'Group ID is required');
   }
 
-  const group = loadGroups().find((g) => g.id === groupId);
-  if (!group) {
-    return res.fail(404, 'Group does not exist');
-  }
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+    const channelsColl = db.collection('channels');
 
-  const channels = loadChannels();
-  return res.success(channels.filter((c) => c.groupId === groupId));
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group does not exist');
+
+    const channels = await channelsColl.find({ groupId: groupId }).toArray();
+    console.log(`GROUP  | ${group.name} | ${channels.length} channels loaded`);
+    return res.success(channels);
+  } catch (error) {
+    console.error('Error fetching channels:', error);
+    return res.fail(500, 'Internal server error');
+  }
 });
 
 /**
  * Create Channel
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   let name = (req.body.name || '').trim();
   name = name.replace(' ', '-');
-  const groupId = parseInt(req.body.groupId, 10);
+  const groupId = Number(req.body.groupId, 10);
 
   if (!name) {
     return res.fail(400, 'Name is invalid');
@@ -48,34 +46,42 @@ router.post('/', (req, res) => {
     return res.fail(400, 'Group ID is invalid');
   }
 
-  const groups = loadGroups();
-  const group = groups.find((g) => g.id === groupId);
-  if (!group) return res.fail(404, 'Group does not exist');
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+    const channelsColl = db.collection('channels');
 
-  const channels = loadChannels();
-  const maxId = channels.length ? Math.max(...channels.map((c) => c.id)) : 0;
-  const newId = maxId + 1;
+    const group = await groupsColl.findOne({ id: groupId });
+    if (!group) return res.fail(404, 'Group does not exist');
 
-  const channel = { id: newId, name, groupId };
-  channels.push(channel);
-  fs.writeFileSync(channelsPath, JSON.stringify(channels, null, 2));
+    const channels = await channelsColl.find({ groupId: groupId }).toArray();
+    const last = await channelsColl
+      .find({}, { projection: { id: 1 } })
+      .sort({ id: -1 })
+      .limit(1)
+      .toArray();
+    const newId = (last[0]?.id || 0) + 1;
 
-  group.channels = Array.isArray(group.channels) ? group.channels : [];
-  if (!group.channels.includes(newId)) {
-    group.channels.push(newId);
+    const newChannel = { id: newId, name, groupId };
+    await channelsColl.insertOne(newChannel);
+
+    // Update the group document to include the new channel ID
+    await groupsColl.updateOne({ id: groupId }, { $addToSet: { channels: newId } });
+
+    console.log(`GROUP  | ${group.name} | Channel '${newChannel.name}' created`);
+    return res.created(newChannel);
+  } catch (error) {
+    console.error('CHANNEL | Error creating channel: ', error);
+    return res.fail(500, 'Internal server error');
   }
-
-  fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-
-  return res.created(channel);
 });
 
 /**
  * Delete Channel
  */
-router.delete('/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const userId = parseInt(req.query.userId, 10); // pass from frontend
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id, 10);
+  const userId = Number(req.query.userId, 10); // pass from frontend
 
   if (!Number.isInteger(id)) {
     return res.fail(400, 'Channel ID is invalid');
@@ -84,44 +90,44 @@ router.delete('/:id', (req, res) => {
     return res.fail(400, 'User ID is invalid');
   }
 
-  const channels = loadChannels();
-  const index = channels.findIndex((c) => c.id === id);
-  if (index === -1) {
-    return res.fail(404, 'Channel not found');
+  try {
+    const db = getDB();
+    const groupsColl = db.collection('groups');
+    const channelsColl = db.collection('channels');
+    const usersColl = db.collection('users');
+
+    // Find the specific channel to delete
+    const channelToDelete = await channelsColl.findOne({ id: id });
+    if (!channelToDelete) {
+      return res.fail(404, 'Channel not found');
+    }
+
+    /* Load user */
+    const user = await usersColl.findOne({ id: userId });
+    if (!user) return res.fail(404, 'User not found');
+
+    const group = await groupsColl.findOne({ id: channelToDelete.groupId });
+    if (!group) return res.fail(404, 'Parent group not found');
+
+    const isSuper = user.roles?.includes('superadmin');
+    const isOwner = group.owner === userId;
+    const isAdmin = Array.isArray(group.admins) && group.admins.includes(userId);
+    if (!isSuper && !isOwner && !isAdmin) {
+      return res.fail(403, 'Not authorized to delete this channel');
+    }
+
+    // Remove channel from database
+    await channelsColl.deleteOne({ id: id });
+
+    // Remove channel reference from group
+    await groupsColl.updateOne({ id: channelToDelete.groupId }, { $pull: { channels: id } });
+
+    console.log(`GROUP  | ${group.name} | Channel '${channelToDelete.name}' deleted`);
+    return res.noContent();
+  } catch (error) {
+    console.error('CHANNEL | Error deleting channel:', error);
+    return res.fail(500, 'Internal server error');
   }
-  const removed = channels[index];
-
-  // Load users and groups to check permissions
-  const users = JSON.parse(require('../read-json.js').readJsonAsString('./data/users/users.json'));
-  const user = users.find((u) => u.id === userId);
-  if (!user) {
-    return res.fail(404, 'User not found');
-  }
-
-  const groups = loadGroups();
-  const group = groups.find((g) => g.id === removed.groupId);
-  if (!group) {
-    return res.fail(404, 'Parent group not found');
-  }
-
-  const isSuper = user.roles?.includes('superadmin');
-  const isOwner = group.owner === userId;
-  const isAdmin = Array.isArray(group.admins) && group.admins.includes(userId);
-  if (!isSuper && !isOwner && !isAdmin) {
-    return res.fail(403, 'Not authorized to delete this channel');
-  }
-
-  // Remove channel and persist
-  channels.splice(index, 1);
-  fs.writeFileSync(channelsPath, JSON.stringify(channels, null, 2));
-
-  // Remove reference from group
-  if (Array.isArray(group.channels)) {
-    group.channels = group.channels.filter((cid) => cid !== id);
-    fs.writeFileSync(groupsPath, JSON.stringify(groups, null, 2));
-  }
-
-  return res.noContent();
 });
 
 module.exports = router;
