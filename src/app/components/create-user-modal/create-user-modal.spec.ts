@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { CreateUserModal } from './create-user-modal';
 
@@ -8,9 +9,8 @@ describe('CreateUserModal', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CreateUserModal]
-    })
-    .compileComponents();
+      imports: [CreateUserModal, HttpClientTestingModule],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CreateUserModal);
     component = fixture.componentInstance;

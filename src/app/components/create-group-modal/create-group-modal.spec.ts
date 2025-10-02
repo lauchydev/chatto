@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { CreateGroupModal } from './create-group-modal';
 
@@ -8,9 +9,8 @@ describe('CreateGroupModal', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CreateGroupModal]
-    })
-    .compileComponents();
+      imports: [CreateGroupModal, HttpClientTestingModule],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CreateGroupModal);
     component = fixture.componentInstance;
