@@ -9,15 +9,28 @@
   } @else {
   <div class="h-full flex flex-col">
     <!-- Channel header -->
-    <div class="h-12 flex items-center px-4 border-b border-[var(--border)] bg-[var(--chat-bg)]">
+    <div
+      class="h-12 flex items-center justify-between px-4 border-b border-[var(--border)] bg-[var(--chat-bg)]"
+    >
       <div class="font-medium text-[var(--foreground)]">
         # {{ channelsService.getSelectedChannel()?.name }}
       </div>
     </div>
 
+    <!-- Error message -->
+    @if (error()) {
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 mx-4 mt-2 rounded">
+      {{ error() }}
+    </div>
+    }
+
     <!-- Messages area -->
-    <div class="flex-1 p-4 overflow-y-auto flex flex-col">
-      @if (messagein().length == 0) {
+    <div class="flex-1 p-4 overflow-y-auto flex flex-col chat-messages">
+      @if (loading()) {
+      <div class="h-full flex items-center justify-center">
+        <div class="text-[var(--muted-foreground)]">Loading messages...</div>
+      </div>
+      } @else if (messages().length === 0) {
       <div class="h-full flex items-center justify-center">
         <p class="text-[var(--muted-foreground)]">
           No messages in <b>#{{ channelsService.getSelectedChannel()?.name }}</b> yet.
@@ -26,40 +39,97 @@
       } @else {
       <div class="min-h-full flex flex-col">
         <div class="grow"></div>
-        <ul class="space-y-2">
-          @for (message of messagein(); track $index) {
-          <li class="group">
+        <div class="space-y-3">
+          @for (message of messages(); track message.id) {
+
+          <!-- System Messages -->
+          @if (message.isSystemMessage) {
+          <div class="flex justify-center my-4">
             <div
-              class="max-w-[100%] bg-[var(--accent)] text-[var(--accent-foreground)] rounded-lg px-3 py-2 shadow-sm"
+              class="bg-[var(--muted)] text-[var(--muted-foreground)] px-4 py-2 rounded-full text-xs font-medium flex items-center gap-2"
             >
-              <p>{{ message }}</p>
+              {{ message.message }}
+              <span class="text-[var(--muted-foreground)] opacity-70">{{
+                formatDate(message.dateSent)
+              }}</span>
             </div>
-          </li>
-          }
-        </ul>
+          </div>
+          } @else {
+
+          <!-- Regular Messages -->
+          <div class="group flex gap-3">
+            <!-- Avatar -->
+            <div class="w-8 h-8 rounded-full overflow-hidden bg-[var(--muted)] shrink-0">
+              @if (message.userImage) {
+              <img
+                [src]="message.userImage"
+                [alt]="message.username"
+                class="w-full h-full object-cover"
+              />
+              } @else {
+              <img src="default-avatar.svg" alt="" class="w-full h-full object-cover" />
+              }
+            </div>
+
+            <!-- Message content -->
+            <div class="flex-1 min-w-0">
+              <!-- Header -->
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-medium text-[var(--foreground)] text-sm">{{
+                  message.username
+                }}</span>
+                <span class="text-xs text-[var(--muted-foreground)]">{{
+                  formatDate(message.dateSent)
+                }}</span>
+
+                <!-- Delete button (only for own messages or admins) -->
+                @if (message.userId === authService.getCurrentUser()?.id ||
+                authService.getCurrentUser()?.roles?.includes('superadmin')) {
+                <a
+                  class="opacity-0 group-hover:opacity-100 group-hover:bg-[var(--muted)] text-xs text-red-500 hover:text-red-700 ml-auto p-1 pl-2 pr-2 rounded-md mr-5 cursor-pointer"
+                  (click)="deleteMessage(message)"
+                  title="Delete message"
+                >
+                  ✕
+                </a>
+                }
+              </div>
+
+              <!-- Message text -->
+              <div class="text-[var(--foreground)] text-sm break-words">
+                {{ message.message }}
+              </div>
+            </div>
+          </div>
+          } }
+        </div>
       </div>
       }
     </div>
 
     <!-- Message input at bottom -->
-    <div
-      class="h-16 flex items-center gap-2 px-4 border-t border-[var(--border)] bg-[var(--chat-bg)]"
-    >
-      <input
-        type="text"
-        [ngModel]="messageout()"
-        (ngModelChange)="messageout.set($event)"
-        name="messageout"
-        id="messageout"
-        placeholder="Message #{{ channelsService.getSelectedChannel()?.name }}"
-        class="flex-1 bg-[var(--input)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] outline rounded-md px-3 py-2"
-      />
-      <a
-        role="button"
-        class="px-3 py-2 rounded-md bg-[var(--primary)] text-white cursor-pointer"
-        (click)="send()"
-        >Send</a
-      >
+    <div class="border-t border-[var(--border)] bg-[var(--chat-bg)] p-4">
+      <div class="flex items-center gap-2">
+        <input
+          type="text"
+          [ngModel]="messageout()"
+          (ngModelChange)="messageout.set($event)"
+          (keydown.enter)="send()"
+          name="messageout"
+          id="messageout"
+          placeholder="Message #{{ channelsService.getSelectedChannel()?.name }}"
+          class="flex-1 bg-[var(--input)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] border border-[var(--border)] rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          [disabled]="!socketService.isConnected()"
+        />
+        <a
+          role="button"
+          class="px-4 py-2 rounded-md bg-[var(--primary)] text-white cursor-pointer hover:bg-[var(--primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          [class.opacity-50]="!messageout().trim() || !socketService.isConnected()"
+          [class.cursor-not-allowed]="!messageout().trim() || !socketService.isConnected()"
+          (click)="send()"
+          >Send</a
+        >
+      </div>
     </div>
   </div>
   }

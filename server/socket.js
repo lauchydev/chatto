@@ -17,14 +17,23 @@ function initializeSocket(server) {
     console.log(`Socket connected: ${socket.id}`);
 
     /* Join a channel */
-    socket.on('join-channel', (channelId) => {
+    socket.on('join-channel', async (data) => {
+      const { channelId, userId, username } = data;
       socket.join(`channel-${channelId}`);
       console.log(`Socket ${socket.id} joined channel ${channelId}`);
+
+      try {
+        await checkAndCreateFirstJoinMessage(channelId, userId, username);
+      } catch (error) {
+        console.error('Error checking first join:', error);
+      }
 
       /* Emit to other users about join */
       socket.to(`channel-${channelId}`).emit('user-joined-channel', {
         socketId: socket.id,
         channelId: channelId,
+        userId: userId,
+        username: username,
         timestamp: new Date(),
       });
     });
@@ -74,26 +83,6 @@ function initializeSocket(server) {
         console.error('Error handling socket message:', error);
         socket.emit('message-error', 'Failed to send message');
       }
-    });
-
-    /* Typing indicator (pretty cool) */
-    socket.on('typing', (data) => {
-      const { channelId, userId, username } = data;
-      socket.to(`channel-${channelId}`).emit('user-typing', {
-        userId,
-        username,
-        channelId,
-        socketId: socket.id,
-      });
-    });
-
-    socket.on('stop-typing', (data) => {
-      const { channelId, userId } = data;
-      socket.to(`channel-${channelId}`).emit('user-stop-typing', {
-        userId,
-        channelId,
-        socketId: socket.id,
-      });
     });
 
     /* Handle message deletion for all users */
@@ -176,6 +165,64 @@ async function saveMessageToDatabase(message, channelId, userId) {
   } catch (error) {
     console.error('Error saving message to database:', error);
     return null;
+  }
+}
+
+/* Check if user is joining channel for first time and create welcome message */
+async function checkAndCreateFirstJoinMessage(channelId, userId, username) {
+  try {
+    const db = getDB();
+    const messagesColl = db.collection('messages');
+    const usersColl = db.collection('users');
+
+    /* See if a message from this user already exists */
+    const existingMessage = await messagesColl.findOne({
+      channelId: channelId,
+      userId: userId,
+      isSystemMessage: { $ne: true },
+    });
+
+    /* Check if a joiin message for this user already exists */
+    const existingJoinMessage = await messagesColl.findOne({
+      channelId: channelId,
+      userId: userId,
+      systemMessageType: 'user_joined',
+    });
+
+    if (!existingMessage && !existingJoinMessage) {
+      const user = await usersColl.findOne({ id: userId });
+      if (!user) return;
+
+      const last = await messagesColl
+        .find({}, { projection: { id: 1 } })
+        .sort({ id: -1 })
+        .limit(1)
+        .toArray();
+
+      const newMessageId = (last[0]?.id || 0) + 1;
+
+      /* Join message object */
+      const joinMessage = {
+        id: newMessageId,
+        message: `User ${username} has been added to the channel - ${dateSent}`,
+        channelId: channelId,
+        userId: userId,
+        username: 'System',
+        userImage: '',
+        dateSent: new Date(),
+        isSystemMessage: true,
+        systemMessageType: 'user_joined',
+      };
+
+      await messagesColl.insertOne(joinMessage);
+
+      const { _id, ...cleanMessage } = joinMessage;
+      if (io) {
+        io.to(`channel-${channelId}`).emit('new-message', cleanMessage);
+      }
+    }
+  } catch (error) {
+    console.error('Error creating first join message:', error);
   }
 }
 

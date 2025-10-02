@@ -68,6 +68,30 @@ router.post('/', async (req, res) => {
     // Update the group document to include the new channel ID
     await groupsColl.updateOne({ id: groupId }, { $addToSet: { channels: newId } });
 
+    /* Channel creation message */
+    const messagesColl = db.collection('messages');
+    const lastMessage = await messagesColl
+      .find({}, { projection: { id: 1 } })
+      .sort({ id: -1 })
+      .limit(1)
+      .toArray();
+
+    const newMessageId = (lastMessage[0]?.id || 0) + 1;
+
+    const systemMessage = {
+      id: newMessageId,
+      message: `New channel #${name} was created`,
+      channelId: newId,
+      userId: 0, // System user ID
+      username: 'System',
+      userImage: '',
+      dateSent: new Date(),
+      isSystemMessage: true,
+      systemMessageType: 'channel_created',
+    };
+
+    await messagesColl.insertOne(systemMessage);
+
     console.log(`GROUP  | ${group.name} | Channel '${newChannel.name}' created`);
     return res.created(newChannel);
   } catch (error) {

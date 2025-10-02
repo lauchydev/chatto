@@ -1,10 +1,11 @@
-import { User } from './user.interface';
-
 export interface Message {
-  id: string;
-  user: User;
+  id: number;
   message: string;
-  channel: string;
-  group: string;
+  channelId: number;
+  userId: number;
+  username: string;
+  userImage: string;
   dateSent: Date;
+  isSystemMessage?: boolean;
+  systemMessageType?: 'channel_created' | 'user_joined' | 'user_left';
 }
