@@ -12,6 +12,30 @@ Chatto is a Single Page Application (SPA) built on the MEAN stack:
 - **Node.js** - JavaScript runtime for the backend server
 - **Socket.io** - Real-time bidirectional communication
 
+## Git Repository Organization
+
+### Branch Structure
+
+The repository followed a feature-based branching strategy:
+
+- **`main`** - Production-ready code with stable releases
+- **Feature branches** - Individual features developed in isolation before merging
+
+### Repository Structure
+
+```
+chatto/
+├── src/                    # Angular frontend application
+│   ├── app/               # Angular components, services, and models
+│   └── ...
+├── server/                # Node.js backend application
+│   ├── routes/           # API route modules
+│   ├── test/             # Backend test suites
+│   └── ...
+├── screenshots/          # Application screenshots for documentation
+└── README.md            # Comprehensive project documentation
+```
+
 ## Data Structures
 
 ### MongoDB Collections
