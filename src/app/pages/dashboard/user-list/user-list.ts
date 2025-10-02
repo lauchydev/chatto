@@ -1,10 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { UsersService } from '../../../services/users.service';
 import { Auth } from '../../../services/auth.service';
 import { User } from '../../../model/user.interface';
 import { Groups } from '../../../services/groups.service';
+import { SocketService } from '../../../services/socket.service';
 import { effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { Check, LucideAngularModule, MoreHorizontal, X } from 'lucide-angular';
 
 @Component({
@@ -13,11 +15,13 @@ import { Check, LucideAngularModule, MoreHorizontal, X } from 'lucide-angular';
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })
-export class UserList {
+export class UserList implements OnInit, OnDestroy {
   /* Services */
   protected usersService = inject(UsersService);
   protected authService = inject(Auth);
   protected groupsService = inject(Groups);
+  private socketService = inject(SocketService);
+  private subscriptions: Subscription[] = [];
 
   /* Icons */
   readonly AllowIcon = Check;
@@ -34,6 +38,48 @@ export class UserList {
   protected error = '';
   private lastGroupId: number | null = null;
   showUserDropdownId: number | null = null;
+
+  ngOnInit(): void {
+    this.subscriptions.push(
+      this.socketService.onUserKicked().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.socketService.onUserBanned().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.socketService.onUserUnbanned().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.socketService.onUserJoinedGroup().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.socketService.onNewJoinRequest().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.socketService.onJoinRequestRejected().subscribe((data: any) => {
+        this.reloadCurrentGroup();
+      }),
+
+      this.groupsService.onGroupsRefreshed().subscribe(() => {
+        console.log('🔄 UserList: Groups refreshed, reloading current group data');
+        const currentGroupId = this.groupsService.selectedGroupId();
+        if (currentGroupId) {
+          this.loadAllGroupData(currentGroupId);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  private reloadCurrentGroup(): void {}
 
   /* Effect to load users on group selection */
   private userListEffect = effect(() => {
@@ -146,22 +192,7 @@ export class UserList {
     const groupId = this.groupsService.getSelectedGroup()?.id;
     if (!groupId) return;
 
-    const wasAdmin = this.groupAdminUsers.some((u) => u.id === user.id);
-    const prevAdmins = this.groupAdminUsers;
-    const prevMembers = this.memberUsers;
-
-    this.groupAdminUsers = this.groupAdminUsers.filter((u) => u.id !== user.id);
-    this.memberUsers = this.memberUsers.filter((u) => u.id !== user.id);
-
-    this.groupsService.kickUser(groupId, user.id).subscribe({
-      next: () => this.groupsService.refreshGroups(),
-      error: (error) => {
-        console.error('Failed to kick user: ', error);
-        this.error = 'Failed to kick user';
-        this.groupAdminUsers = prevAdmins;
-        this.memberUsers = prevMembers;
-      },
-    });
+    this.groupsService.kickUser(groupId, user.id);
   }
 
   onBanUser(user: User): void {
@@ -169,32 +200,7 @@ export class UserList {
     const groupId = this.groupsService.getSelectedGroup()?.id;
     if (!groupId) return;
 
-    const prevAdmins = this.groupAdminUsers;
-    const prevMembers = this.memberUsers;
-    const prevBanned = this.bannedUsers;
-
-    this.groupAdminUsers = this.groupAdminUsers.filter((u) => u.id !== user.id);
-    this.memberUsers = this.memberUsers.filter((u) => u.id !== user.id);
-    this.bannedUsers = [...this.bannedUsers, user];
-
-    this.groupsService.banUser(groupId, user.id).subscribe({
-      next: () => this.groupsService.refreshGroups(),
-      error: (err) => {
-        console.error('Ban failed: ', err);
-        // Check if user is already banned
-        if (err.error?.error === 'User already banned') {
-          this.error = 'User is already banned';
-          // Don't rollback state since user is actually banned
-          this.groupsService.refreshGroups();
-        } else {
-          this.error = 'Failed to ban user';
-          // Rollback optimistic updates
-          this.groupAdminUsers = prevAdmins;
-          this.memberUsers = prevMembers;
-          this.bannedUsers = prevBanned;
-        }
-      },
-    });
+    this.groupsService.banUser(groupId, user.id);
   }
 
   onUnbanUser(user: User): void {
@@ -202,19 +208,7 @@ export class UserList {
     const groupId = this.groupsService.getSelectedGroup()?.id;
     if (!groupId) return;
 
-    const prevBanned = this.bannedUsers;
-    this.bannedUsers = this.bannedUsers.filter((u) => u.id !== user.id);
-
-    this.groupsService.unbanUser(groupId, user.id).subscribe({
-      next: () => {
-        this.groupsService.refreshGroups();
-      },
-      error: (err) => {
-        console.error('Unban failed: ', err);
-        this.error = 'Failed to unban user';
-        this.bannedUsers = prevBanned;
-      },
-    });
+    this.groupsService.unbanUser(groupId, user.id);
   }
 
   /* Functions for User group requests */
@@ -224,22 +218,8 @@ export class UserList {
       console.error('Invalid group ID: ', groupId);
       return;
     }
-    const u = this.joinRequests.find((r) => r.id === userId);
-    if (!u) return;
-    this.joinRequests = this.joinRequests.filter((r) => r.id !== userId);
-    this.memberUsers = [...this.memberUsers, u];
 
-    this.groupsService.approveRequest(groupId, userId).subscribe({
-      next: () => {
-        this.groupsService.refreshGroups();
-      },
-      error: (err) => {
-        console.error('Approve failed: ', err);
-        this.memberUsers = this.memberUsers.filter((m) => m.id !== userId);
-        this.joinRequests = [...this.joinRequests, u];
-        this.error = 'Failed to approve request';
-      },
-    });
+    this.groupsService.approveRequest(groupId, userId);
   }
 
   rejectRequest(userId: number): void {
@@ -248,18 +228,7 @@ export class UserList {
       console.error('Invalid group ID: ', groupId);
       return;
     }
-    const prev = this.joinRequests;
-    this.joinRequests = this.joinRequests.filter((r) => r.id !== userId);
 
-    this.groupsService.rejectRequest(groupId, userId).subscribe({
-      next: () => {
-        this.groupsService.refreshGroups();
-      },
-      error: (err) => {
-        console.error('Reject failed: ', err);
-        this.joinRequests = prev;
-        this.error = 'Failed to reject request';
-      },
-    });
+    this.groupsService.rejectRequest(groupId, userId);
   }
 }

@@ -55,20 +55,8 @@ export class CreateGroupModal {
     this.isLoading.set(true);
     this.error.set('');
 
-    this.groupService.createGroup(this.groupName, currentUser.id, this.groupImage).subscribe({
-      next: (newGroup) => {
-        console.log('Group created successfully:', newGroup);
-        this.groupService.refreshGroups();
-        this.closeModal();
-      },
-      error: (err) => {
-        console.error('Error creating group:', err);
-        this.error.set('Failed to create group');
-      },
-      complete: () => {
-        console.log('Group creation completed');
-        this.isLoading.set(false);
-      },
-    });
+    this.groupService.createGroup(this.groupName, currentUser.id, this.groupImage);
+    this.closeModal();
+    this.isLoading.set(false);
   }
 }

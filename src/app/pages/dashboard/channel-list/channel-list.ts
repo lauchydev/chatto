@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChannelsService } from '../../../services/channels.service';
@@ -42,12 +42,16 @@ export class ChannelList implements OnInit {
   newChannelName = '';
   private pendingAction: (() => void) | null = null;
 
-  ngOnInit(): void {
-    const selectedGroup = this.groupsService.getSelectedGroup();
-    if (selectedGroup) {
-      this.channelsService.loadChannels(selectedGroup.id);
-    }
+  constructor() {
+    effect(() => {
+      const selectedGroup = this.groupsService.getSelectedGroup();
+      if (selectedGroup) {
+        this.channelsService.loadChannels(selectedGroup.id);
+      }
+    });
   }
+
+  ngOnInit(): void {}
 
   createChannel(): void {
     const trimmed = this.channelName.trim();
@@ -108,10 +112,7 @@ export class ChannelList implements OnInit {
     if (!group) return;
     this.isGroupMenuOpen = false;
     this.pendingAction = () => {
-      this.groupsService.deleteGroup(group.id).subscribe({
-        next: () => this.groupsService.refreshGroups(),
-        error: (e) => console.error('Failed to delete group', e),
-      });
+      this.groupsService.deleteGroup(group.id);
     };
     this.confirmModal.title = 'Delete group';
     this.confirmModal.message = `Are you sure you want to delete "${group.name}"?`;
@@ -124,10 +125,7 @@ export class ChannelList implements OnInit {
     if (!group) return;
     this.isGroupMenuOpen = false;
     this.pendingAction = () => {
-      this.groupsService.leaveGroup(group.id).subscribe({
-        next: () => this.groupsService.refreshGroups(),
-        error: (e) => console.error('Failed to leave group', e),
-      });
+      this.groupsService.leaveGroup(group.id);
     };
     this.confirmModal.title = 'Leave group';
     this.confirmModal.message = `Are you sure you want to leave "${group.name}"?`;

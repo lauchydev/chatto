@@ -54,16 +54,11 @@ export class DiscoverGroupsModal {
   /*  */
   requestToJoin(group: GroupApi): void {
     if (this.isRequested(group.id)) return;
+    this.groupsService.requestToJoin(group.id);
+
     const set = new Set(this.requested());
-    this.groupsService.requestToJoin(group.id).subscribe({
-      next: () => {
-        set.add(group.id);
-        this.requested.set(set);
-      },
-      error: (error) => {
-        console.error('Failed to request join: ', error);
-      },
-    });
+    set.add(group.id);
+    this.requested.set(set);
   }
 
   isRequested(groupId: number): boolean {

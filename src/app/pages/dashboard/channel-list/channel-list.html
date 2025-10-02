@@ -80,14 +80,14 @@
               >
                 Cancel
               </a>
-              <a
-                class="px-3 py-1 rounded-md bg-[var(--primary)] text-white hover:opacity-90 cursor-pointer"
-                [class.opacity-50]="!newChannelName.trim()"
-                [class.pointer-events-none]="!newChannelName.trim()"
+              <button
                 type="submit"
+                class="px-3 py-1 rounded-md bg-[var(--primary)] text-white hover:opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="!newChannelName.trim()"
+                (click)="submitAddChannel()"
               >
                 Create
-              </a>
+              </button>
             </div>
           </div>
         </div>
