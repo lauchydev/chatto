@@ -1,5 +1,5 @@
-const { getDB } = require('../db');
-const GroupModel = require('../models/GroupModel');
+const { getDB } = require('../../db');
+const GroupModel = require('../../models/GroupModel');
 
 async function update(groupId, updateData) {
   try {

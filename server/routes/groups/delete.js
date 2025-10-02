@@ -1,4 +1,4 @@
-const { getDB } = require('../db');
+const { getDB } = require('../../db');
 
 async function deleteGroup(groupId) {
   try {
@@ -9,6 +9,19 @@ async function deleteGroup(groupId) {
     const group = await groupsColl.findOne({ id: groupId });
     if (!group) {
       throw new Error('Group not found');
+    }
+
+    /* Get all channels in this group first */
+    const groupChannels = await channelsColl.find({ groupId: groupId }).toArray();
+    const channelIds = groupChannels.map((channel) => channel.id);
+
+    /* Delete all messages from all channels in this group */
+    const messagesColl = db.collection('messages');
+    if (channelIds.length > 0) {
+      const messageDeleteResult = await messagesColl.deleteMany({ channelId: { $in: channelIds } });
+      console.log(
+        `DELETE | Removed ${messageDeleteResult.deletedCount} messages for group ID: ${groupId}`
+      );
     }
 
     /* Remove the channels */

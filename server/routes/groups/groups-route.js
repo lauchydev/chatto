@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../db');
-const { create } = require('../crud/create');
-const { read } = require('../crud/read');
-const { update } = require('../crud/update');
-const { deleteGroup } = require('../crud/delete');
+const { getDB } = require('../../db');
+const { create } = require('./create');
+const { read } = require('./read');
+const { update } = require('./update');
+const { deleteGroup } = require('./delete');
 
 /**
  *

@@ -1,4 +1,4 @@
-const { getDB } = require('../db');
+const { getDB } = require('../../db');
 
 async function read(groupId = null) {
   try {
