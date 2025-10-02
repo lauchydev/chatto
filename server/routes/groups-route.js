@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { getDB } = require('../db');
+const { create } = require('../crud/create');
+const { read } = require('../crud/read');
+const { update } = require('../crud/update');
+const { deleteGroup } = require('../crud/delete');
 
 /**
  *
@@ -21,23 +25,26 @@ router.get('/', async (req, res) => {
   try {
     const db = getDB();
     const usersColl = db.collection('users');
-    const groupsColl = db.collection('groups');
 
     const user = await usersColl.findOne({ id: userId });
     if (!user) {
       return res.fail(404, 'User not found');
     }
 
-    let filter = {};
+    let filteredGroups;
     if (Array.isArray(user.roles) && user.roles.includes('superadmin')) {
-      filter = {};
+      filteredGroups = await read();
     } else if (Array.isArray(user.roles) && user.roles.includes('groupadmin')) {
-      filter = { $or: [{ owner: user.id }, { admins: userId }, { members: userId }] };
+      const allGroups = await read();
+      filteredGroups = allGroups.filter(
+        (group) =>
+          group.owner === user.id || group.admins.includes(userId) || group.members.includes(userId)
+      );
     } else {
-      filter = { members: userId };
+      const allGroups = await read();
+      filteredGroups = allGroups.filter((group) => group.members.includes(userId));
     }
 
-    const filteredGroups = await groupsColl.find(filter).toArray();
     console.log(`SERVER | Loaded ${filteredGroups.length} groups`);
     return res.success(filteredGroups);
   } catch (error) {
@@ -85,7 +92,6 @@ router.get('/discover', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const db = getDB();
-    const groupsColl = db.collection('groups');
     const usersColl = db.collection('users');
 
     const { name, id, image } = req.body;
@@ -109,20 +115,7 @@ router.post('/', async (req, res) => {
 
     const superAdminIds = superAdmins.map((u) => u.id);
 
-    /**
-     *  Get last group ID by:
-     *  Get list of group ID's -> sort it from last to first -> limit to 1 group
-     */
-    const last = await groupsColl
-      .find({}, { projection: { id: 1 } })
-      .sort({ id: -1 })
-      .limit(1)
-      .toArray();
-
-    const newId = (last[0]?.id || 0) + 1;
-
-    const newGroup = {
-      id: newId,
+    const groupData = {
       name: name.trim(),
       icon: image || '',
       owner: ownerId,
@@ -133,7 +126,7 @@ router.post('/', async (req, res) => {
       banned: [],
     };
 
-    await groupsColl.insertOne(newGroup);
+    const newGroup = await create(groupData);
     return res.created(newGroup);
   } catch (error) {
     console.error('Error creating group: ', error);
@@ -150,45 +143,35 @@ router.put('/:id', async (req, res) => {
     return res.fail(400, 'Invalid group ID');
   }
   try {
-    const db = getDB();
-    const groupsColl = db.collection('groups');
-
-    const group = await groupsColl.findOne({ id: groupId });
-
-    if (!group) {
-      return res.fail(404, 'Group not found');
-    }
-
     const { name, icon } = req.body || {};
-    const update = {};
+    const updates = {};
 
     if (name !== undefined) {
       const trimmed = String(name).trim();
       if (!trimmed) {
         return res.fail(400, 'Group name is required');
       }
-      update.name = trimmed;
+      updates.name = trimmed;
     }
 
     if (icon !== undefined) {
-      update.icon = icon;
+      updates.icon = icon;
     }
 
-    /* Check if there arent any updated to process and return */
-    if (Object.keys(update).length === 0) {
-      return res.success(group);
+    /* Check if there aren't any updates to process */
+    if (Object.keys(updates).length === 0) {
+      const existingGroup = await read(groupId);
+      return res.success(existingGroup);
     }
 
-    /* Process the updates */
-    const result = await groupsColl.findOneAndUpdate(
-      { id: groupId },
-      /* Name and Icon are the only modifiable fields (At the moment) */
-      { $set: { name: update.name, icon: update.icon } },
-      /* Return after so the updated group is visible immediately */
-      { returnDocument: 'after' }
-    );
+    /* Process the updates using Workshop 9 CRUD */
+    const updatedGroup = await update(groupId, updates);
 
-    return res.success(result.value);
+    if (!updatedGroup) {
+      return res.fail(404, 'Group not found');
+    }
+
+    return res.success(updatedGroup);
   } catch (error) {
     console.error('Error updating group: ', error);
     return res.fail(500, 'Failed to update group');
@@ -365,12 +348,16 @@ router.delete('/:userId', async (req, res) => {
  */
 router.delete('/delete/:groupId', async (req, res) => {
   const groupId = Number(req.params.groupId);
+  if (!Number.isInteger(groupId)) {
+    return res.fail(400, 'Invalid group ID');
+  }
   try {
-    const db = getDB();
-    const groupsColl = db.collection('groups');
-
-    await groupsColl.deleteOne({ id: groupId });
-    return res.success({ message: 'Group deleted' });
+    const result = await deleteGroup(groupId);
+    if (result.success) {
+      return res.success({ message: result.message });
+    } else {
+      return res.fail(404, result.message);
+    }
   } catch (error) {
     console.error('Error deleting group: ', error);
     return res.fail(500, 'Failed to delete group');
