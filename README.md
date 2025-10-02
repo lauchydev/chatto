@@ -2,55 +2,79 @@
 
 ## About
 
-This repository contains the source code for the web application **Chatto**. Chatto is a web based chat and video application where users can connect with eachother through groups. When you first register, you can request to join a variety of group chats where you can communicate with other users via text, voice or chat. At the users request an Admin can create your own personal group where you can invite friends to chat and call to create the next big thing!
+This repository contains the source code for the web application **Chatto**. Chatto is a web-based real-time chat application where users can connect with each other through groups. When you first register, you can request to join a variety of group chats where you can communicate with other users via text messaging with real-time updates. Group admins can create channels within groups and manage user permissions including banning, kicking, and approving join requests.
 
-Chatto is a SPA based on the MEAN stack using an Node/Express Server backend followed up with an Angular SPA frontend. \*\*Where all data is stored in a NoSQL MongoDB database.
+Chatto is a Single Page Application (SPA) built on the MEAN stack:
 
-\*\*MongoDB implementation expected in phase 2 of the app
+- **MongoDB** - NoSQL database for persistent data storage
+- **Express.js** - Node.js web framework for REST API
+- **Angular** - Frontend SPA framework with TypeScript
+- **Node.js** - JavaScript runtime for the backend server
+- **Socket.io** - Real-time bidirectional communication
 
 ## Data Structures
 
-### Server-side JSON Models
+### MongoDB Collections
 
-- `users` (server/data/users/users.json)
+#### `users` Collection
 
-  - `id: number` Unique identifier for users
-  - `username: string` Identifier for user login
-  - `email: string` The user's email address
-  - `image?: string` _Optional_ - Image path for avatar
-  - `birthdate?: string` _Optional_ - Birth date
-  - `age?: number | null` _Optional_ - Age
-  - `roles: string[]` (e.g. `superadmin`, `groupadmin`, `user`)
-  - `password: string` User set password
-  - `valid: boolean` Whether the user login is validated
-  - `banned: boolean` Flag for when a user has been banned
-  - `reported: boolean` Flag when a user has been reported
+- `id: number` Unique identifier for users
+- `username: string` Identifier for user login
+- `email: string` The user's email address
+- `image?: string` _Optional_ - Image path for avatar
+- `birthdate?: Date` _Optional_ - Birth date
+- `age?: number | null` _Optional_ - Age
+- `roles: string[]` (e.g. `superadmin`, `groupadmin`, `user`)
+- `password: string` User set password
+- `valid: boolean` Whether the user login is validated
+- `banned?: boolean` Flag for when a user has been banned
+- `reported?: boolean` Flag when a user has been reported
 
-- `groups` (server/data/groups/groups.json)
+#### `groups` Collection
 
-  - `id: number` Unique identifier for the group
-  - `name: string` The name of the group
-  - `icon?: string` _Optional_ - Path for group image
-  - `owner: number` (user id) - ID of the group owner
-  - `members: number[]` (user ids) - List of User ID's for group members
-  - `admins: number[]` (user ids) - List of User ID's who are admins
-  - `channels?: number[]` (channel ids) - List of Channels by ID
-  - `requests?: number[]` (pending join user ids) - List of users ID's requesting to join the group
-  - `banned?: number[]` (user ids) - List of User ID's banned from the group
+- `id: number` Unique identifier for the group
+- `name: string` The name of the group
+- `description?: string` _Optional_ - Group description
+- `owner: number` (user id) - ID of the group owner
+- `members: number[]` (user ids) - List of User ID's for group members
+- `admins: number[]` (user ids) - List of User ID's who are admins
+- `requests?: number[]` (pending join user ids) - List of users ID's requesting to join the group
+- `banned?: number[]` (user ids) - List of User ID's banned from the group
 
-- `channels` (server/data/channels/channels.json)
-  - `id: number` Unique channel identifier
-  - `name: string` (separated by hyphen) - Display name of group
-  - `groupId: number` ID of the group the channel belongs to
+#### `channels` Collection
 
-### Server-side constructors
+- `id: number` Unique channel identifier
+- `name: string` Display name of channel
+- `members: number[]` List of user IDs with access to the channel
+- `groupId: number` ID of the group the channel belongs to
 
-- `server/data/users/user.js` (Users)
-  - Provides a constructor used by auth to shape a login response with essential fields and flags.
-- `server/data/groups/group.js` (Groups)
-  - Minimal constructor (not heavily used by routes) capturing group fields.
-- `server/data/channels/channel.js` (Channel)
-  - Minimal constructor with `id`, `name`, `groupId`.
+#### `messages` Collection
+
+- `id: number` Unique message identifier
+- `message: string` Message content
+- `channelId: number` ID of the channel the message belongs to
+- `userId: number` ID of the user who sent the message
+- `username: string` Username of the message sender
+- `userImage?: string` _Optional_ - Avatar image of the sender
+- `dateSent: Date` Timestamp when the message was sent
+- `isSystemMessage?: boolean` _Optional_ - Flag for automated system messages
+- `systemMessageType?: string` _Optional_ - Type of system message (join, leave, etc.)
+
+### Database Architecture
+
+#### MongoDB Connection (`server/db.js`)
+
+- **Connection Management**: Centralized MongoDB connection using native MongoDB driver
+- **Database Operations**: Provides `getDB()`, `connectDB()`, and `health()` functions
+- **Collections**: Manages `users`, `groups`, `channels`, and `messages` collections
+- **Error Handling**: Robust connection error handling and retry logic
+
+#### CRUD Operations (`server/routes/groups/`)
+
+- **Create** (`create.js`): Handles document insertion with ID generation
+- **Read** (`read.js`): Manages data retrieval with filtering and sorting
+- **Update** (`update.js`): Processes document updates and modifications
+- **Delete** (`delete.js`): Manages document deletion with cascade operations
 
 ### Client-side Interfaces
 
@@ -61,6 +85,8 @@ Chatto is a SPA based on the MEAN stack using an Node/Express Server backend fol
   - `Group`: client-expanded form with resolved relations: `members: User[]`, `admins: User[]`, `channels: Channel[]`.
 - `src/app/model/channel.interface.ts` (`Channel`)
   - `id, name, members: number[], groupId` (members reserved for future use; server stores only `groupId`).
+- `src/app/model/message.ts` (`Message`)
+  - `id, message, channelId, userId, username, userImage?, dateSent, isSystemMessage?, systemMessageType?`
 
 ## Angular Architecture
 
@@ -74,7 +100,7 @@ Chatto is a SPA based on the MEAN stack using an Node/Express Server backend fol
   - `dashboard/group-list` (`GroupList`): Lists groups available to the user and discoverable groups.
   - `dashboard/channel-list` (`ChannelList`): Channels for a selected group; create/delete channel.
   - `dashboard/user-list` (`UserList`): Members/admins/requests for a group; kick/ban/unban/approve/reject.
-  - `dashboard/chat` (`Chat`): Channel selection and messaging placeholder.
+  - `dashboard/chat` (`Chat`): Real-time messaging interface with Socket.io integration, message history, and live updates.
 
 ### Reusable Components (Modals)
 
@@ -98,6 +124,15 @@ Chatto is a SPA based on the MEAN stack using an Node/Express Server backend fol
 - `ChannelsService`
   - Channel state: `channels` and `selectedChannel` signals.
   - API calls: `loadChannels(groupId)`, `createChannel(name, groupId)`, `deleteChannel(channelId)`; selection helpers.
+- `SocketService`
+  - Real-time communication via Socket.io client integration.
+  - Channel management: `joinChannel`, `leaveChannel`, `getCurrentChannelId`.
+  - Message operations: `sendMessage`, `deleteMessage`.
+  - Event observables: `onMessage`, `onMessageDeleted`, `onUserJoinedChannel`, `onUserLeftChannel`.
+  - Group events: `onGroupsUpdated`, `onGroupCreated`, `onGroupDeleted`.
+- `MessagesService`
+  - HTTP-based message operations: `getMessages(channelId)`, `createMessage`, `deleteMessage`.
+  - Integrates with `SocketService` for real-time updates.
 
 ### Models
 
@@ -121,21 +156,41 @@ Chatto is a SPA based on the MEAN stack using an Node/Express Server backend fol
 
 ### Entry point and middleware
 
-- `server/index.js`
+- `server/server.js`
   - Express app on port `3000` with `cors` and `express.json()`.
-  - Route modules mounted at `/api/auth`, `/api/groups`, `/api/channels`, `/api/users`.
+  - MongoDB connection initialization with health checks.
+  - Socket.io server initialization for real-time communication.
+  - Route modules mounted at `/api/auth`, `/api/groups`, `/api/channels`, `/api/users`, `/api/messages`.
+  - Custom response middleware for consistent API responses.
 
-### Modules and files
+### Real-time Communication (`server/socket.js`)
 
-- Route modules under `server/routes/`:
-  - `auth-route.js`: login endpoint; validates credentials from JSON; returns a `User` response with flags.
-  - `groups-route.js`: group listing, discovery, create, membership requests (request/approve/reject), ban/unban, kick/leave, delete.
-  - `channels-route.js`: list channels for a group, create channel, delete channel with role checks.
-  - `users-route.js`: CRUD for users, username availability, and report.
-- Data helpers:
-  - `server/read-json.js`: `readJsonAsString`, `writeJsonToFile`, `appendJsonToFile` (JSON file IO with Validation from [Allan Week 3](https://github.com/abrowning-gu/demo-week3/blob/main/week3-server/user-list.js)).
-- Persisted data files:
-  - `server/data/users/users.json`, `server/data/groups/groups.json`, `server/data/channels/channels.json`.
+- **Socket.io Server**: Handles real-time bidirectional communication
+- **Channel-based Messaging**: Users join channels for channel-based messaging.
+- **Event Handling**:
+  - `join-channel` / `leave-channel`: Channel management
+  - `new-message`: Real-time message broadcasting to channel members
+  - `delete-message`: Live message deletion across all connected members
+  - Group management events: `join-group`, `leave-group`, `ban-user`, etc.
+- **System Messages**: Automated notifications for user joins, channel creation, etc.
+- **Message Persistence**: Integration with MongoDB for chat history storage
+
+### Route Modules (`server/routes/`)
+
+- `auth-route.js`: MongoDB-based authentication with user lookup and ban checking
+- `groups-route.js`: Complete MongoDB integration for group CRUD, membership management, and admin operations
+- `channels-route.js`: MongoDB-powered channel operations with group validation
+- `users-route.js`: Full MongoDB CRUD for user management with role-based permissions
+- `messages-route.js`: Message CRUD operations with Socket.io integration for real-time updates
+
+### Database
+
+- `server/db.js`: MongoDB connection management
+- `server/routes/groups/`: CRUD operations for consistent database interactions (Only for group management)
+  - `create.js`: Document creation with auto-incrementing IDs
+  - `read.js`: Data retrieval with filtering and pagination
+  - `update.js`: Document updates with validation
+  - `delete.js`: Document deletion
 
 ## API Reference (Server Routes)
 
@@ -190,6 +245,14 @@ All endpoints use a unified response middleware:
 | `/channels`     | POST   | `name`, `groupId`             | `201`: created channel<br>`400`: invalid name/id<br>`404`: group not found                            | Create a channel in a group                        |
 | `/channels/:id` | DELETE | `id` (path), `userId` (query) | `204`: no content<br>`400`: invalid ids<br>`403`: unauthorized<br>`404`: channel/group/user not found | Delete a channel if user is superadmin/owner/admin |
 
+### Messages
+
+| Route           | Method | Parameters                               | Response                                                                        | Purpose                           |
+| --------------- | ------ | ---------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------- |
+| `/messages`     | GET    | `channelId` (query), `limit?`, `offset?` | `200`: `Message[]`<br>`400`: channelId required<br>`404`: channel not found     | Get message history for a channel |
+| `/messages`     | POST   | `message`, `channelId`, `userId`         | `201`: created message<br>`400`: invalid input<br>`404`: channel/user not found | Send a new message                |
+| `/messages/:id` | DELETE | `id` (path), `userId` (query)            | `200`: message deleted<br>`403`: unauthorized<br>`404`: message not found       | Delete a message                  |
+
 ## Client–Server Interaction Details
 
 ### Authentication and session
@@ -217,12 +280,33 @@ All endpoints use a unified response middleware:
 - Signup makes POST requests to `/api/users`; `Login` then authenticates via `/api/auth`.
 - Admin can delete or report users via `UsersService` endpoints; group membership is updated server-side, and the client refreshes groups.
 
+### Real-time Communication
+
+- **Socket.io Integration**: Two-way real-time communication between client and server
+- **Channel-based Messaging**: Users automatically join channel-specific rooms for channel-based messages
+- **Live Updates**: Messages, user joins/leaves, and group changes update instantly across all members
+- **Message History**: Chat history loaded from MongoDB on channel selection, with real-time messages showing
+- **System Notifications**: Automated messages for user joins, channel creation, and other events
+
 ### UI state and reactivity
 
-- Angular signals are used for local state (`Groups` and `ChannelsService`).
-- Selected ids are persisted in `localStorage` (`selectedGroupId`) to preserve selected groups upon reloads (Will reflect the same for channels in phase 2).
+- **Angular Signals**: Used for state management (`Groups`, `ChannelsService`, `MessagesService`)
+- **Real-time Updates**: Socket.io observables combined with with Angular signals for live UI updates
+- **Persistent State**: Selected IDs stored in `localStorage` (`selectedGroupId`, `selectedChannelId`) for session persistence
 
 ## Running the Project
+
+### Prerequisites
+
+- **Node.js** (v16 or higher)
+- **MongoDB** (local db or MongoDB Atlas connection)
+- **Angular CLI** (`npm install -g @angular/cli`)
+
+### MongoDB Setup
+
+1. **Local MongoDB**: Install and start MongoDB service
+2. **MongoDB Atlas**: Create cluster and get connection string
+3. **Environment**: Update connection string in `server/db.js` if needed
 
 ### Express Server
 
@@ -230,9 +314,9 @@ From Project root `/`:
 
 1. `cd server`
 2. `npm install`
-3. `nodemon` (`index.js` is default server file)
+3. `npm start` or `nodemon server.js`
 
-- API: `http://localhost:3000/`
+- **API**: `http://localhost:3000/`
 
 ### Angular App
 
@@ -241,13 +325,28 @@ From Project root:
 1. `npm install`
 2. `ng serve`
 
-- APP: `http://localhost:4200/`
+- **APP**: `http://localhost:4200/`
 
-## Disclaimer
+### Testing
 
-- User data is stored under `/server/data/<groups|users|channels>.json` which are temporary solutions required for phase 1 of this app, phase 2 will move to more rubust MongoDB data storage.
+#### Backend Tests (Mocha + Chai + Supertest)
+
+```bash
+cd server
+npm test
+```
+
+#### Frontend Tests (Angular + Jasmine + Karma)
+
+```bash
+npm test
+```
 
 ## Screenshots
+
+### Chat
+
+![Chat](screenshots/chat.png)
 
 ### Login
 
