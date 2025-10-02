@@ -1,39 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const { Server } = require('socket.io');
 const app = express();
 const PORT = 3000;
 const { connectDB, health } = require('./db');
+const { initializeSocket } = require('./socket');
 
 app.use(cors());
 app.use(express.json());
 app.use(require('./utils/responses'));
-
-const options = {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-};
 
 /* Using Express 'app.listen()' which removes the need to create the http server */
 const server = app.listen(PORT, () => {
   console.log('Server started successfully (Port: ', PORT, ')');
 });
 
-const io = require('socket.io')(server, options);
-/* one-to-many data */
-io.on('connection', (socket) => {
-  /* Listen for messages with title of 'new-message' */
-  socket.on('new-message', (message) => {
-    /* Emit to clients waiting on 'new-message' */
-    io.emit('new-message', message);
-  });
-  /* Disconnect */
-  socket.on('disconnect', () => {
-    io.emit('user-disconnected', socket.id);
-  });
-});
+/* Initialize Socket.io */
+initializeSocket(server);
 
 /* Init Database */
 (async () => {
@@ -51,6 +33,7 @@ app.use('/api/auth', require('./routes/auth-route'));
 app.use('/api/groups', require('./routes/groups-route'));
 app.use('/api/channels', require('./routes/channels-route'));
 app.use('/api/users', require('./routes/users-route'));
+app.use('/api/messages', require('./routes/messages-route'));
 
 // 404 for unknown API routes
 app.use('/api', (req, res) => {

@@ -90,19 +90,15 @@ router.post('/', async (req, res) => {
 
     await messagesColl.insertOne(newMessage);
 
-    // Remove MongoDB _id field for clean response
     const { _id, ...cleanMessage } = newMessage;
-
     console.log(`MESSAGE | User ${user.username} sent message in channel ${channelId}`);
 
-    // Emit to all users in this channel via socket
+    /* Emit message to channel */
     try {
       emitToChannel(channelId, 'new-message', cleanMessage);
     } catch (socketError) {
       console.warn('Socket emission failed:', socketError.message);
-      // Continue with HTTP response even if socket fails
     }
-
     return res.created(cleanMessage);
   } catch (error) {
     console.error('Error creating message:', error);
@@ -151,7 +147,7 @@ router.delete('/:id', async (req, res) => {
 
     console.log(`MESSAGE | Message ${messageId} deleted by ${user.username}`);
 
-    // Emit deletion to all users in the channel via socket
+    /* Emit message deletion to channel */
     try {
       emitToChannel(message.channelId, 'message-deleted', {
         messageId,
@@ -161,7 +157,6 @@ router.delete('/:id', async (req, res) => {
       });
     } catch (socketError) {
       console.warn('Socket emission failed:', socketError.message);
-      // Continue with HTTP response even if socket fails
     }
 
     return res.success({ message: 'Message deleted' });
