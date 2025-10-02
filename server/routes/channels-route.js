@@ -140,11 +140,12 @@ router.delete('/:id', async (req, res) => {
       return res.fail(403, 'Not authorized to delete this channel');
     }
 
-    // Remove channel from database
     await channelsColl.deleteOne({ id: id });
 
-    // Remove channel reference from group
     await groupsColl.updateOne({ id: channelToDelete.groupId }, { $pull: { channels: id } });
+
+    const messagesColl = db.collection('messages');
+    const deletedMessages = await messagesColl.deleteMany({ channelId: id });
 
     console.log(`GROUP  | ${group.name} | Channel '${channelToDelete.name}' deleted`);
     return res.noContent();

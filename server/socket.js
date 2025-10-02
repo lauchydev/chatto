@@ -355,11 +355,13 @@ async function checkAndCreateFirstJoinMessage(channelId, userId, username) {
       isSystemMessage: { $ne: true },
     });
 
-    /* Check if a joiin message for this user already exists */
+    /* Check if a join message for this user already exists  */
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const existingJoinMessage = await messagesColl.findOne({
       channelId: channelId,
       userId: userId,
       systemMessageType: 'user_joined',
+      dateSent: { $gte: fiveMinutesAgo },
     });
 
     if (!existingMessage && !existingJoinMessage) {
@@ -762,6 +764,12 @@ async function handleDeleteChannel(data) {
     await channelsColl.deleteOne({ id: channelId });
     await groupsColl.updateOne({ id: channel.groupId }, { $pull: { channels: channelId } });
 
+    const messagesColl = db.collection('messages');
+    const deletedMessages = await messagesColl.deleteMany({ channelId: channelId });
+    console.log(
+      `SOCKET CLEANUP | Deleted ${deletedMessages.deletedCount} messages from channel ${channelId}`
+    );
+
     console.log(`SOCKET | Channel deleted: ${channel.name} from Group ${channel.groupId}`);
     return { success: true, data: { channelId, groupId: channel.groupId, deleterId: userId } };
   } catch (error) {
@@ -789,6 +797,24 @@ async function handleDeleteGroup(data) {
     if (!isSuper && !isOwner) {
       return { success: false, error: 'Not authorized to delete this group' };
     }
+
+    const channelsColl = db.collection('channels');
+    const messagesColl = db.collection('messages');
+
+    const groupChannels = await channelsColl.find({ groupId: groupId }).toArray();
+    const channelIds = groupChannels.map((channel) => channel.id);
+
+    if (channelIds.length > 0) {
+      const deletedMessages = await messagesColl.deleteMany({ channelId: { $in: channelIds } });
+      console.log(
+        `SOCKET CLEANUP | Deleted ${deletedMessages.deletedCount} messages from group ${groupId}`
+      );
+    }
+
+    const deletedChannels = await channelsColl.deleteMany({ groupId: groupId });
+    console.log(
+      `SOCKET CLEANUP | Deleted ${deletedChannels.deletedCount} channels from group ${groupId}`
+    );
 
     await groupsColl.deleteOne({ id: groupId });
 

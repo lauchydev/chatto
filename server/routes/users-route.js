@@ -183,6 +183,32 @@ router.delete('/:id', async (req, res) => {
     );
 
     // 3. Delete groups owned by this user
+    const ownedGroups = await groupsColl.find({ owner: userId }).toArray();
+    const ownedGroupIds = ownedGroups.map((group) => group.id);
+
+    if (ownedGroupIds.length > 0) {
+      const channelsColl = db.collection('channels');
+      const messagesColl = db.collection('messages');
+
+      // Get all channels in owned groups
+      const groupChannels = await channelsColl.find({ groupId: { $in: ownedGroupIds } }).toArray();
+      const channelIds = groupChannels.map((channel) => channel.id);
+
+      // Delete all messages from owned groups
+      if (channelIds.length > 0) {
+        const deletedMessages = await messagesColl.deleteMany({ channelId: { $in: channelIds } });
+        console.log(
+          `USER CLEANUP | Deleted ${deletedMessages.deletedCount} messages from user ${userId}'s groups`
+        );
+      }
+
+      // Delete all channels from owned groups
+      const deletedChannels = await channelsColl.deleteMany({ groupId: { $in: ownedGroupIds } });
+      console.log(
+        `USER CLEANUP | Deleted ${deletedChannels.deletedCount} channels from user ${userId}'s groups`
+      );
+    }
+
     await groupsColl.deleteMany({ owner: userId });
 
     console.log(`USER | User ID ${userId} deleted successfully`);

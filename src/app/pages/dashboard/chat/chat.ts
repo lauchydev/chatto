@@ -28,15 +28,17 @@ export class Chat implements OnInit, OnDestroy {
 
   /* Subscriptions */
   private subscriptions: Subscription[] = [];
+  private lastJoinedChannelId: number | null = null;
 
   constructor() {
     /* Watch for channel changes */
     effect(() => {
       const selectedChannel = this.channelsService.getSelectedChannel();
       const currentUser = this.authService.getCurrentUser();
-      if (selectedChannel && currentUser) {
+      if (selectedChannel && currentUser && selectedChannel.id !== this.lastJoinedChannelId) {
         this.loadChannelMessages(selectedChannel.id);
         this.socketService.joinChannel(selectedChannel.id, currentUser.id, currentUser.username);
+        this.lastJoinedChannelId = selectedChannel.id;
       }
     });
   }
@@ -54,6 +56,7 @@ export class Chat implements OnInit, OnDestroy {
     if (currentChannelId) {
       this.socketService.leaveChannel(currentChannelId);
     }
+    this.lastJoinedChannelId = null;
   }
 
   /* Load messages for a channel */
