@@ -16,7 +16,7 @@ const createTestApp = () => {
   app.use(require('../utils/responses'));
 
   app.use('/api/auth', require('../routes/auth-route'));
-  app.use('/api/groups', require('../routes/groups-route'));
+  app.use('/api/groups', require('../routes/groups/groups-route'));
   app.use('/api/channels', require('../routes/channels-route'));
   app.use('/api/users', require('../routes/users-route'));
   app.use('/api/messages', require('../routes/messages-route'));
