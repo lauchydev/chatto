@@ -1,5 +1,7 @@
-/* TailwindCSS v4 import */
-@import 'tailwindcss';
+/* TailwindCSS v3 imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* CSS Custom Properties - Core colors only */
 :root {
